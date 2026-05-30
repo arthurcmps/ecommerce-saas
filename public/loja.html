@@ -7,24 +7,29 @@
     <link rel="stylesheet" href="css/loja.css">
 </head>
 <body>
+    <!-- Cabeçalho Principal -->
     <header class="store-header" id="store-header">
         <div class="store-container header-content">
             <h1 id="public-store-name">A carregar...</h1>
-            <nav>
+            <nav class="header-nav">
                 <a href="#">Início</a>
                 <a href="#">Produtos</a>
-                <a href="#">Contato</a>
+                <button id="btn-open-cart" class="cart-toggle-btn">
+                    🛒 Carrinho <span id="cart-badge" class="cart-badge">0</span>
+                </button>
             </nav>
         </div>
     </header>
 
+    <!-- Destaque (Hero) -->
     <section class="store-hero" id="store-hero">
         <div class="store-container">
             <h2>Bem-vindo à nossa loja!</h2>
-            <p>Descubra produtos incríveis selecionados especialmente para si.</p>
+            <p>Descubra produtos incrívelmente selecionados especialmente para si.</p>
         </div>
     </section>
 
+    <!-- Produtos -->
     <main class="store-container" style="padding: 4rem 0;">
         <h3 class="section-title">Os Nossos Produtos</h3>
         
@@ -32,6 +37,57 @@
             <p style="text-align: center; width: 100%;">A carregar os produtos...</p>
         </div>
     </main>
+
+    <!-- Gaveta do Carrinho -->
+    <div id="cart-overlay" class="cart-overlay"></div>
+    <aside id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h2>O Seu Carrinho</h2>
+            <button id="btn-close-cart" class="close-cart-btn">&times;</button>
+        </div>
+        
+        <div id="cart-items" class="cart-items">
+            <p class="empty-cart-msg">O seu carrinho está vazio.</p>
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price">R$ 0,00</span>
+            </div>
+            <button id="btn-checkout" class="btn-checkout">Finalizar Compra</button>
+        </div>
+    </aside>
+
+    <!-- Modal de Checkout (Formulário de Entrega) -->
+    <div id="checkout-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background-color: #fff; width: 90%; max-width: 450px; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+            <h2 style="color: var(--text-color); margin-bottom: 0.5rem;">Finalizar Pedido</h2>
+            <p style="color: #718096; margin-bottom: 1.5rem; font-size: 0.9rem;">Preencha os seus dados para envio e contacto.</p>
+            
+            <form id="checkout-form" style="display: flex; flex-direction: column; gap: 1.2rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-color);">Nome Completo</label>
+                    <input type="text" id="buyer-name" required style="padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; outline: none; font-size: 1rem;">
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-color);">Telemóvel / WhatsApp</label>
+                    <input type="text" id="buyer-phone" required placeholder="(00) 00000-0000" style="padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; outline: none; font-size: 1rem;">
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-color);">Endereço Completo de Entrega</label>
+                    <textarea id="buyer-address" rows="3" required placeholder="Rua, Número, Bairro, Cidade..." style="padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; outline: none; font-family: inherit; resize: vertical; font-size: 1rem;"></textarea>
+                </div>
+                
+                <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button type="submit" class="btn-checkout">Confirmar e Enviar Pedido</button>
+                    <button type="button" id="btn-cancel-checkout" style="width: 100%; padding: 1rem; background: none; border: none; color: #a0aec0; cursor: pointer; font-weight: bold; font-size: 1rem;">Voltar ao Carrinho</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/loja.js"></script>
