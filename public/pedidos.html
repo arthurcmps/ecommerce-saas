@@ -14,9 +14,14 @@
         <div id="sidebar-container"></div>
 
         <main class="main-content">
-            <header class="top-header">
-                <h1>Gestão de Pedidos</h1>
-                <p style="color: #a0aec0;">Acompanhe e atualize o estado das suas vendas.</p>
+            <header class="top-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 1.5rem;">
+                <div>
+                    <h1>Gestão de Pedidos</h1>
+                    <p style="color: #a0aec0;">Acompanhe e atualize o estado das suas vendas.</p>
+                </div>
+                
+                <!-- Barra de Pesquisa -->
+                <input type="text" id="search-orders" placeholder="🔍 Buscar por cliente, data ou estado..." style="width: 100%; max-width: 500px; padding: 0.8rem 1.2rem; border-radius: 8px; border: 1px solid #4a5568; background-color: #2d3748; color: #fff; outline: none; font-size: 0.95rem;">
             </header>
 
             <section class="orders-container">
@@ -29,27 +34,35 @@
 
     <!-- Modal de Detalhes do Pedido -->
     <div id="order-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center;">
-        <div style="background-color: #1a202c; width: 90%; max-width: 700px; border-radius: 12px; padding: 2rem; border: 1px solid rgba(255,255,255,0.1); position: relative; max-height: 90vh; overflow-y: auto;">
+        <div style="background-color: #1a202c; width: 90%; max-width: 800px; border-radius: 12px; padding: 2rem; border: 1px solid rgba(255,255,255,0.1); position: relative; max-height: 90vh; overflow-y: auto;">
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
                 <h2 id="modal-order-title" style="color: #fff;">Detalhes do Pedido</h2>
                 <button id="btn-close-modal" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
             </div>
             
-            <div class="order-details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+            <div class="order-details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem;">
                 <div class="order-info-block">
                     <h3 style="color: #a0aec0; font-size: 0.8rem; text-transform: uppercase;">Cliente</h3>
                     <p id="detail-customer-name" style="color: #fff;"></p>
                     <p id="detail-customer-phone" style="color: #fff;"></p>
                 </div>
+                
+                <div class="order-info-block">
+                    <h3 style="color: #a0aec0; font-size: 0.8rem; text-transform: uppercase;">Envio</h3>
+                    <p id="detail-freight-method" style="color: #ed8936; font-weight: bold; text-transform: uppercase;"></p>
+                    <p id="detail-freight-cost" style="color: #fff;"></p>
+                </div>
+
                 <div class="order-info-block">
                     <h3 style="color: #a0aec0; font-size: 0.8rem; text-transform: uppercase;">Pagamento</h3>
                     <p id="detail-payment-method" style="color: #68d391; font-weight: bold; text-transform: uppercase;"></p>
                     <p id="detail-payment-status" style="color: #fff; text-transform: capitalize;"></p>
                 </div>
+
                 <div class="order-info-block">
                     <h3 style="color: #a0aec0; font-size: 0.8rem; text-transform: uppercase;">Morada de Entrega</h3>
-                    <p id="detail-customer-address" style="color: #fff; white-space: pre-wrap; line-height: 1.4;"></p>
+                    <p id="detail-customer-address" style="color: #fff; white-space: pre-wrap; line-height: 1.4; font-size: 0.9rem;"></p>
                 </div>
             </div>
 
@@ -58,9 +71,20 @@
                 <!-- Os itens aparecem aqui -->
             </div>
 
-            <div class="order-total-block" style="display: flex; justify-content: space-between; margin-top: 1.5rem; font-size: 1.2rem; font-weight: bold; color: #ed8936;">
-                <span>Total do Pedido:</span>
-                <span id="detail-total-price">R$ 0,00</span>
+            <!-- Resumo Financeiro Detalhado -->
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: flex; justify-content: space-between; color: #a0aec0; margin-bottom: 0.5rem;">
+                    <span>Subtotal dos Produtos:</span>
+                    <span id="detail-subtotal-price">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: #a0aec0; margin-bottom: 1rem;">
+                    <span>Custo de Frete:</span>
+                    <span id="detail-freight-total">R$ 0,00</span>
+                </div>
+                <div class="order-total-block" style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: bold; color: #ed8936;">
+                    <span>Total Final:</span>
+                    <span id="detail-total-price">R$ 0,00</span>
+                </div>
             </div>
 
             <h3 style="color: #fff; margin: 1.5rem 0 1rem;">Estado do Pedido</h3>

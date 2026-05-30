@@ -6,8 +6,8 @@ import { renderSidebar, updateSidebarData } from "./sidebar.js";
 
 const dashboardContent = document.getElementById('dashboard-content');
 const ordersList = document.getElementById('orders-list');
+const searchInput = document.getElementById('search-orders');
 
-// Elementos do Modal
 const modal = document.getElementById('order-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
 const statusSelect = document.getElementById('order-status-select');
@@ -57,7 +57,6 @@ async function loadOrders() {
             const orderId = docSnap.id;
             loadedOrders[orderId] = order; 
 
-            // Tratamento blindado de datas
             let dateStr = "A processar data...";
             if (order.created_at && typeof order.created_at.toDate === 'function') {
                 dateStr = order.created_at.toDate().toLocaleString('pt-PT');
@@ -87,7 +86,6 @@ async function loadOrders() {
     }
 }
 
-// Função global para abrir o modal
 window.openOrderDetails = (orderId) => {
     viewingOrderId = orderId;
     const order = loadedOrders[orderId];
@@ -96,27 +94,40 @@ window.openOrderDetails = (orderId) => {
     document.getElementById('detail-customer-name').innerText = order.buyer_name || 'Desconhecido';
     document.getElementById('detail-customer-phone').innerText = order.buyer_phone || 'Sem contacto';
     
-    // Tratamento Inteligente do Endereço (Suporta texto antigo ou o novo objeto)
+    // Morada de Entrega
     let addressText = 'Morada não informada';
     if (order.buyer_address) {
         if (typeof order.buyer_address === 'object') {
             const a = order.buyer_address;
             addressText = `${a.street || ''}, ${a.number || ''} ${a.complement ? '- ' + a.complement : ''}\nBairro: ${a.neighborhood || ''}\n${a.city || ''} / ${a.state || ''}\nCEP: ${a.cep || ''}`;
         } else {
-            addressText = order.buyer_address; // Para manter compatibilidade com pedidos antigos
+            addressText = order.buyer_address;
         }
     }
     document.getElementById('detail-customer-address').innerText = addressText;
 
-    // Novos campos de pagamento
+    // Campos de Pagamento
     document.getElementById('detail-payment-method').innerText = order.payment_method || 'Não especificado';
     document.getElementById('detail-payment-status').innerText = `Estado: ${order.payment_status || 'Pendente'}`;
     
-    const total = parseFloat(order.total_amount) || 0;
-    document.getElementById('detail-total-price').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    // Novos Campos de Frete
+    const freightMethod = order.freight_method || 'A combinar / Padrão';
+    const freightCost = parseFloat(order.freight_cost) || 0;
+    
+    document.getElementById('detail-freight-method').innerText = freightMethod;
+    document.getElementById('detail-freight-cost').innerText = freightCost === 0 ? 'Grátis' : freightCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('detail-freight-total').innerText = freightCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    // Cálculo do Total e Subtotal
+    const totalFinal = parseFloat(order.total_amount) || 0;
+    const subtotal = totalFinal - freightCost;
+    
+    document.getElementById('detail-subtotal-price').innerText = subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('detail-total-price').innerText = totalFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     
     statusSelect.value = order.status || 'novo';
 
+    // Lista de Itens
     const itemsList = document.getElementById('detail-items-list');
     itemsList.innerHTML = '';
     
@@ -164,4 +175,24 @@ btnUpdateStatus.addEventListener('click', async () => {
         btnUpdateStatus.innerText = originalText;
         btnUpdateStatus.disabled = false;
     }
+
+    // --- SISTEMA DE BUSCA EM TEMPO REAL ---
+    if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const cards = ordersList.querySelectorAll('.order-card');
+                
+                cards.forEach(card => {
+                    // Pega todo o texto dentro do cartão (nome, data, preço, estado)
+                    const cardText = card.innerText.toLowerCase();
+                    
+                    // Se o texto digitado existir dentro do cartão, mostra-o. Se não, oculta-o.
+                    if (cardText.includes(term)) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+        });
+     }
 });

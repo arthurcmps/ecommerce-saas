@@ -267,18 +267,113 @@ function renderCart() {
 }
 
 // LÓGICA DE AUTO-PREENCHIMENTO E GRAVAÇÃO BLINDADA
+// --- VARIÁVEIS DE FRETE ---
+let freteValor = 0;
+let freteMetodo = "";
+
+// Função para simular o cálculo (MVP)
+function calcularFrete(cep) {
+    // Aqui no futuro entrará a integração com Melhor Envio ou Correios
+    const basePac = 15.90;
+    const baseSedex = 35.50;
+
+    const optionsHtml = `
+        <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0; background-color: #fff;">
+            <div style="display: flex; gap: 0.8rem; align-items: center;">
+                <input type="radio" name="frete-radio" value="${basePac}" data-name="PAC (Padrão)" onchange="selecionarFrete(this)" required style="width: 18px; height: 18px;">
+                <span style="font-size: 0.95rem; font-weight: bold; color: var(--text-color);">PAC (Padrão)</span>
+            </div>
+            <span style="font-size: 0.95rem; color: var(--text-color);">R$ ${basePac.toFixed(2).replace('.', ',')}</span>
+        </label>
+        
+        <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0; background-color: #fff;">
+            <div style="display: flex; gap: 0.8rem; align-items: center;">
+                <input type="radio" name="frete-radio" value="${baseSedex}" data-name="SEDEX (Expresso)" onchange="selecionarFrete(this)">
+                <span style="font-size: 0.95rem; font-weight: bold; color: var(--text-color);">SEDEX (Expresso)</span>
+            </div>
+            <span style="font-size: 0.95rem; color: var(--text-color);">R$ ${baseSedex.toFixed(2).replace('.', ',')}</span>
+        </label>
+    `;
+    
+    document.getElementById('shipping-options').innerHTML = optionsHtml;
+}
+
+// Atualiza o valor quando o cliente clica numa opção
+window.selecionarFrete = (radio) => {
+    freteValor = parseFloat(radio.value);
+    freteMetodo = radio.getAttribute('data-name');
+    atualizarBotaoPagamento();
+}
+
+// Calcula o total final e escreve no botão
+function atualizarBotaoPagamento() {
+    let cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let finalTotal = cartTotal + freteValor;
+    const btnSubmit = checkoutForm.querySelector('button[type="submit"]');
+    btnSubmit.innerText = `Pagar R$ ${finalTotal.toFixed(2).replace('.', ',')} Agora`;
+}
+
+// Ouve as mudanças no campo do CEP para recálculo de Frete e Morada Automática
+const cepInputCheckout = document.getElementById('buyer-cep');
+if (cepInputCheckout) {
+    cepInputCheckout.addEventListener('input', async (e) => {
+        const val = e.target.value.replace(/\D/g, ''); // Fica apenas com os números
+        
+        // Se o CEP for alterado/apagado e ficar incompleto, resetamos o frete
+        if (val.length < 8) {
+            freteValor = 0;
+            freteMetodo = "";
+            document.getElementById('shipping-options').innerHTML = '<p style="font-size: 0.9rem; color: #718096; margin: 0; text-align: center;">Digite um CEP válido para calcular o frete.</p>';
+            atualizarBotaoPagamento(); // Tira o valor do frete do botão
+            return;
+        }
+
+        // Quando o cliente digita os 8 números do CEP novo
+        if (val.length === 8) {
+            // 1. Obriga o cliente a escolher o frete de novo
+            freteValor = 0;
+            freteMetodo = "";
+            atualizarBotaoPagamento();
+            
+            // 2. Calcula as novas opções
+            calcularFrete(val);
+            
+            // 3. Magia UX: Puxa a nova rua, bairro e cidade do ViaCEP automaticamente!
+            try {
+                document.getElementById('buyer-address').value = "A procurar morada...";
+                const response = await fetch(`https://viacep.com.br/ws/${val}/json/`);
+                const data = await response.json();
+                
+                if (!data.erro) {
+                    document.getElementById('buyer-address').value = data.logradouro || '';
+                    document.getElementById('buyer-neighborhood').value = data.bairro || '';
+                    document.getElementById('buyer-city').value = data.localidade || '';
+                    document.getElementById('buyer-state').value = data.uf || '';
+                    document.getElementById('buyer-number').focus(); // Move o cursor para o número
+                } else {
+                    document.getElementById('buyer-address').value = "";
+                }
+            } catch (error) {
+                console.error("Erro ao buscar novo CEP:", error);
+                document.getElementById('buyer-address').value = "";
+            }
+        }
+    });
+}
+
+// --- CHECKOUT ATUALIZADO ---
 btnCheckout.addEventListener('click', () => {
     if (cart.length === 0) {
         alert("O seu carrinho está vazio!");
         return;
     }
 
+    freteValor = 0; // Reinicia o frete ao abrir
+
     if (currentCustomerData) {
-        // Preenche sempre o nome e telefone, caso existam
         if(document.getElementById('buyer-name')) document.getElementById('buyer-name').value = currentCustomerData.name || '';
         if(document.getElementById('buyer-phone')) document.getElementById('buyer-phone').value = currentCustomerData.phone || '';
         
-        // Verifica se a conta tem o objeto de endereço do registo novo
         if (currentCustomerData.address && typeof currentCustomerData.address === 'object') {
             const addr = currentCustomerData.address;
             if(document.getElementById('buyer-cep')) document.getElementById('buyer-cep').value = addr.cep || '';
@@ -288,9 +383,16 @@ btnCheckout.addEventListener('click', () => {
             if(document.getElementById('buyer-neighborhood')) document.getElementById('buyer-neighborhood').value = addr.neighborhood || '';
             if(document.getElementById('buyer-city')) document.getElementById('buyer-city').value = addr.city || '';
             if(document.getElementById('buyer-state')) document.getElementById('buyer-state').value = addr.state || '';
+            
+            // Dispara o frete automaticamente usando o CEP que veio do banco!
+            if (addr.cep) {
+                const cleanCep = addr.cep.replace(/\D/g, '');
+                if (cleanCep.length >= 8) calcularFrete(cleanCep);
+            }
         }
     }
 
+    atualizarBotaoPagamento();
     closeCart(); 
     checkoutModal.style.display = 'flex'; 
 });
@@ -303,7 +405,14 @@ btnCancelCheckout.addEventListener('click', () => {
 checkoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Proteção: Ocultar o erro clássico de finalizar sem selecionar frete
+    if (freteValor === 0) {
+        alert("Por favor, selecione uma opção de entrega.");
+        return;
+    }
+    
     const btnSubmit = checkoutForm.querySelector('button[type="submit"]');
+    const originalText = btnSubmit.innerText;
     btnSubmit.innerText = "A gerar pagamento...";
     btnSubmit.disabled = true;
 
@@ -321,7 +430,8 @@ checkoutForm.addEventListener('submit', async (e) => {
         state: document.getElementById('buyer-state').value
     };
 
-    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let totalComFrete = cartTotal + freteValor;
 
     const orderData = {
         customer_id: currentCustomerId || null,
@@ -330,8 +440,10 @@ checkoutForm.addEventListener('submit', async (e) => {
         buyer_address: structuredAddress,
         payment_method: paymentMethod,
         payment_status: 'pendente',
+        freight_method: freteMetodo, // Regista o nome do frete
+        freight_cost: freteValor,    // Regista o valor do frete
         items: cart, 
-        total_amount: total,
+        total_amount: totalComFrete, // Salva o total já somado com o frete
         status: 'novo', 
         created_at: serverTimestamp()
     };
@@ -346,13 +458,13 @@ checkoutForm.addEventListener('submit', async (e) => {
         checkoutForm.reset();
         checkoutModal.style.display = 'none';
 
-        alert(`Pedido #${newOrderId.substring(0,6)} registado com sucesso!\nMétodo: ${paymentMethod.toUpperCase()}.\n\nA aguardar integração do Gateway de Pagamento.`);
+        alert(`Pedido #${newOrderId.substring(0,6)} registado com sucesso!\nForma de Envio: ${freteMetodo}\nMétodo de Pagamento: ${paymentMethod.toUpperCase()}\nTotal: R$ ${totalComFrete.toFixed(2).replace('.', ',')}\n\nA aguardar integração do Gateway de Pagamento.`);
         
     } catch (error) {
         console.error("Erro ao gravar o pedido:", error);
-        alert("Ocorreu um erro. Verifique as regras do Firestore ou se está logado corretamente.");
+        alert("Ocorreu um erro. Verifique a sua ligação.");
     } finally {
-        btnSubmit.innerText = "Ir para Pagamento Seguro";
+        btnSubmit.innerText = originalText;
         btnSubmit.disabled = false;
     }
 });
