@@ -14,7 +14,7 @@ export function renderSidebar(activePage) {
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="${activePage === 'dashboard' ? 'active' : ''}">Visão Geral</a>
                 <a href="produtos.html" class="${activePage === 'produtos' ? 'active' : ''}">Gerir Produtos</a>
-                <a href="#">Pedidos</a>
+                <a href="pedidos.html" class="${activePage === 'pedidos' ? 'active' : ''}">Pedidos</a>
                 <a href="design.html" class="${activePage === 'design' ? 'active' : ''}">Personalizar Design</a>
                 
                 <a href="#" id="link-my-store" target="_blank" style="margin-top: 2rem; color: #fff; background-color: rgba(255,255,255,0.1);">👁️ Ver Minha Loja</a>

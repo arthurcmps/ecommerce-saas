@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Okan Marketplace - Super Catálogo</title>
+    <link rel="stylesheet" href="css/loja.css">
+    <style>
+        .marketplace-header { background-color: #1a202c; color: #fff; padding: 1.5rem 0; }
+        .store-badge { background-color: #ed8936; color: #fff; font-size: 0.75rem; padding: 0.3rem 0.6rem; border-radius: 4px; display: inline-block; margin-bottom: 0.8rem; font-weight: bold; }
+        .nav-link { color: #fff; text-decoration: none; margin-left: 1.5rem; font-weight: bold; }
+        .nav-link:hover { color: #ed8936; }
+    </style>
+</head>
+<body style="background-color: #f7fafc;">
+    
+    <header class="marketplace-header">
+        <div class="store-container header-content">
+            <h1 style="color: #ed8936;">Okan Marketplace</h1>
+            <nav class="header-nav">
+                <a href="catalogo.html" class="nav-link">Todos os Produtos</a>
+                <a href="#" class="nav-link">Meus Pedidos</a>
+                <a href="login-cliente.html" id="nav-login" class="nav-link" style="border: 1px solid #fff; padding: 0.4rem 1.2rem; border-radius: 20px;">Entrar</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="store-hero" style="background-color: #2d3748; padding: 3rem 0; text-align: center;">
+        <div class="store-container">
+            <h2 style="color: #fff; font-size: 2rem; margin-bottom: 0.5rem;">Descubra produtos incríveis de várias lojas</h2>
+            <p style="color: #a0aec0;">Compre com segurança e receba em casa.</p>
+        </div>
+    </section>
+
+    <main class="store-container" style="padding: 4rem 0;">
+        <div id="marketplace-products" class="vitrine-grid">
+            <p style="text-align: center; width: 100%; color: #718096;">A procurar os melhores produtos para si...</p>
+        </div>
+    </main>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/catalogo.js"></script>
+</body>
+</html>

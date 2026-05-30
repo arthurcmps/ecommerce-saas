@@ -12,8 +12,10 @@
         <div class="store-container header-content">
             <h1 id="public-store-name">A carregar...</h1>
             <nav class="header-nav">
-                <a href="#">Início</a>
+                <a href="catalogo.html">Catálogo Global</a>
                 <a href="#">Produtos</a>
+                <a href="login-cliente.html" id="nav-login" style="color: #fff; text-decoration: none; font-weight: bold; margin-right: 1rem; border: 1px solid rgba(255,255,255,0.3); padding: 0.4rem 1rem; border-radius: 20px;">Entrar</a>
+                
                 <button id="btn-open-cart" class="cart-toggle-btn">
                     🛒 Carrinho <span id="cart-badge" class="cart-badge">0</span>
                 </button>
@@ -59,34 +61,61 @@
         </div>
     </aside>
 
-    <!-- Modal de Checkout (Formulário de Entrega) -->
-    <div id="checkout-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center;">
-        <div style="background-color: #fff; width: 90%; max-width: 450px; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+    <!-- Modal de Checkout (Formulário de Entrega e Pagamento) -->
+    <div id="checkout-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center; overflow-y: auto;">
+        
+        <div style="background-color: #fff; width: 90%; max-width: 550px; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin: 2rem 0;">
             <h2 style="color: var(--text-color); margin-bottom: 0.5rem;">Finalizar Pedido</h2>
-            <p style="color: #718096; margin-bottom: 1.5rem; font-size: 0.9rem;">Preencha os seus dados para envio e contacto.</p>
+            <p style="color: #718096; margin-bottom: 1.5rem; font-size: 0.9rem;">Confirme os seus dados de entrega e pagamento.</p>
             
-            <form id="checkout-form" style="display: flex; flex-direction: column; gap: 1.2rem;">
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-color);">Nome Completo</label>
-                    <input type="text" id="buyer-name" required style="padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; outline: none; font-size: 1rem;">
-                </div>
+            <form id="checkout-form" style="display: flex; flex-direction: column; gap: 1rem;">
                 
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-color);">Telemóvel / WhatsApp</label>
-                    <input type="text" id="buyer-phone" required placeholder="(00) 00000-0000" style="padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; outline: none; font-size: 1rem;">
+                <!-- DADOS PESSOAIS -->
+                <div style="display: flex; gap: 1rem;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 0.3rem;">
+                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-color);">Nome Completo</label>
+                        <input type="text" id="buyer-name" required style="padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e0; outline: none;">
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 0.3rem;">
+                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-color);">Telemóvel</label>
+                        <input type="text" id="buyer-phone" required style="padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e0; outline: none;">
+                    </div>
                 </div>
+
+                <!-- ENDEREÇO SEPARADO -->
+                <h3 style="font-size: 1rem; color: var(--text-color); margin-top: 0.5rem; border-bottom: 1px solid #edf2f7; padding-bottom: 0.3rem;">Endereço de Entrega</h3>
                 
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-color);">Endereço Completo de Entrega</label>
-                    <textarea id="buyer-address" rows="3" required placeholder="Rua, Número, Bairro, Cidade..." style="padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; outline: none; font-family: inherit; resize: vertical; font-size: 1rem;"></textarea>
+                <div style="display: flex; gap: 1rem;">
+                    <input type="text" id="buyer-cep" placeholder="CEP" required style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e0;">
+                    <input type="text" id="buyer-address" placeholder="Rua / Logradouro" required style="flex: 2; padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e0;">
                 </div>
+                <div style="display: flex; gap: 1rem;">
+                    <input type="text" id="buyer-number" placeholder="Número" required style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e0;">
+                    <input type="text" id="buyer-complement" placeholder="Complemento (Opcional)" style="flex: 2; padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e0;">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <input type="text" id="buyer-neighborhood" placeholder="Bairro" required style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e0;">
+                    <input type="text" id="buyer-city" placeholder="Cidade" required style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e0;">
+                    <input type="text" id="buyer-state" placeholder="UF" required style="width: 70px; padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e0;">
+                </div>
+
+                <!-- PAGAMENTO -->
+                <h3 style="font-size: 1rem; color: var(--text-color); margin-top: 0.5rem; border-bottom: 1px solid #edf2f7; padding-bottom: 0.3rem;">Método de Pagamento</h3>
                 
-                <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                    <button type="submit" class="btn-checkout">Confirmar e Enviar Pedido</button>
+                <select id="payment-method" required style="padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e0; outline: none; font-size: 1rem; background-color: #f7fafc; cursor: pointer;">
+                    <option value="" disabled selected>Escolha como quer pagar...</option>
+                    <option value="pix">PIX (Aprovação Imediata)</option>
+                    <option value="cartao">Cartão de Crédito</option>
+                    <option value="boleto">Boleto Bancário</option>
+                </select>
+                
+                <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button type="submit" class="btn-checkout">Ir para Pagamento Seguro</button>
                     <button type="button" id="btn-cancel-checkout" style="width: 100%; padding: 1rem; background: none; border: none; color: #a0aec0; cursor: pointer; font-weight: bold; font-size: 1rem;">Voltar ao Carrinho</button>
                 </div>
             </form>
         </div>
+        
     </div>
 
     <script type="module" src="js/firebase-config.js"></script>

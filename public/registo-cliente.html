@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registo - Área do Cliente</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: var(--bg-color, #0f111a); padding: 3rem 1rem;">
+    
+    <div class="form-panel" style="width: 100%; max-width: 550px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); padding: 3rem 2rem; background-color: #1a202c;">
+        <form id="register-client-form">
+            <h2 style="text-align: center; color: #fff;">Criar Conta</h2>
+            <span class="subtitle" style="text-align: center; display: block; margin-bottom: 2rem;">Registe-se para compras mais rápidas.</span>
+
+            <p id="error-message" class="error-message"></p>
+
+            <!-- DADOS PESSOAIS -->
+            <h3 style="font-size: 1.1rem; color: #a0aec0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 1rem;">Dados Pessoais</h3>
+            
+            <div class="input-group">
+                <label for="name">Nome Completo</label>
+                <input type="text" id="name" placeholder="O seu nome" required>
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="phone">Telemóvel (WhatsApp)</label>
+                    <input type="text" id="phone" placeholder="(00) 00000-0000" required>
+                </div>
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" placeholder="O seu e-mail" required>
+                </div>
+            </div>
+
+            <!-- ENDEREÇO DE ENTREGA -->
+            <h3 style="font-size: 1.1rem; color: #a0aec0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin: 1.5rem 0 1rem;">Endereço de Entrega</h3>
+            
+            <div class="input-row">
+                <div class="input-group" style="flex: 1;">
+                    <label for="cep">CEP</label>
+                    <input type="text" id="cep" placeholder="00000-000" maxlength="9" required>
+                </div>
+                <div class="input-group" style="flex: 2;">
+                    <label for="address">Logradouro / Rua</label>
+                    <input type="text" id="address" placeholder="Ex: Av. Paulista" required>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-group" style="flex: 1;">
+                    <label for="number">Número</label>
+                    <input type="text" id="number" placeholder="Ex: 1000" required>
+                </div>
+                <div class="input-group" style="flex: 2;">
+                    <label for="complement">Complemento (Opcional)</label>
+                    <input type="text" id="complement" placeholder="Apto 101, Bloco B">
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="neighborhood">Bairro</label>
+                    <input type="text" id="neighborhood" required>
+                </div>
+                <div class="input-group">
+                    <label for="city">Cidade</label>
+                    <input type="text" id="city" required>
+                </div>
+                <div class="input-group" style="max-width: 80px;">
+                    <label for="state">UF</label>
+                    <input type="text" id="state" maxlength="2" required>
+                </div>
+            </div>
+
+            <!-- SEGURANÇA -->
+            <h3 style="font-size: 1.1rem; color: #a0aec0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin: 1.5rem 0 1rem;">Segurança</h3>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div class="input-group">
+                    <label for="confirm-password">Confirmar Senha</label>
+                    <input type="password" id="confirm-password" required>
+                </div>
+            </div>
+
+            <button type="submit" id="register-button" style="margin-top: 1.5rem;">Criar Conta e Salvar Endereço</button>
+
+            <p class="link-text" style="text-align: center; margin-top: 1.5rem;">
+                Já tem conta? <a href="login-cliente.html" id="link-login">Fazer login</a>
+            </p>
+        </form>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/registo-cliente.js"></script>
+</body>
+</html>

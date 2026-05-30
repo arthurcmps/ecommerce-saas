@@ -1,12 +1,14 @@
 // js/loja.js
 import { doc, getDoc, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { db } from "./firebase-config.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { db, auth } from "./firebase-config.js";
 
 const urlParams = new URLSearchParams(window.location.search);
 const storeId = urlParams.get('id');
 
 const storeNameElement = document.getElementById('public-store-name');
 const productsList = document.getElementById('public-products-list');
+const navLogin = document.getElementById('nav-login');
 
 // Elementos do Carrinho
 const btnOpenCart = document.getElementById('btn-open-cart');
@@ -17,22 +19,63 @@ const cartBadge = document.getElementById('cart-badge');
 const cartItemsContainer = document.getElementById('cart-items');
 const cartTotalPrice = document.getElementById('cart-total-price');
 const btnCheckout = document.getElementById('btn-checkout');
+
+// Elementos do Modal de Checkout
 const checkoutModal = document.getElementById('checkout-modal');
 const checkoutForm = document.getElementById('checkout-form');
 const btnCancelCheckout = document.getElementById('btn-cancel-checkout');
 
-let publicProductsData = {}; // Memória dos produtos para facilitar o carrinho
-
-// Inicializa o carrinho lendo do localStorage (memória do navegador)
-// Usamos o storeId na chave para o cliente poder ter carrinhos diferentes em lojas diferentes
+let publicProductsData = {}; 
 let cart = JSON.parse(localStorage.getItem(`cart_${storeId}`)) || [];
 let storePhoneNumber = "";
 
-// Funções para abrir e fechar a gaveta
+let currentCustomerId = null;
+let currentCustomerData = null;
+
+// Ouve se o cliente está logado e vai buscar os dados de forma blindada
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentCustomerId = user.uid;
+        
+        if(navLogin) {
+            navLogin.innerText = "Sair da Conta";
+            navLogin.href = "#";
+            navLogin.addEventListener('click', (e) => {
+                e.preventDefault();
+                signOut(auth).then(() => window.location.reload());
+            });
+        }
+
+        try {
+            // Tenta buscar na coleção de clientes
+            let userDoc = await getDoc(doc(db, 'customers', user.uid));
+            
+            if (userDoc.exists()) {
+                currentCustomerData = userDoc.data();
+            } else {
+                // FALLBACK: Se você estiver a testar logado com a conta do Lojista
+                userDoc = await getDoc(doc(db, 'stores', user.uid));
+                if (userDoc.exists()) {
+                    currentCustomerData = userDoc.data();
+                }
+            }
+        } catch (error) {
+            console.error("Erro ao buscar perfil:", error);
+        }
+    } else {
+        currentCustomerId = null;
+        currentCustomerData = null;
+        if(navLogin) {
+            navLogin.innerText = "Entrar";
+            navLogin.href = `login-cliente.html?id=${storeId || ''}`;
+        }
+    }
+});
+
 function openCart() {
     cartSidebar.classList.add('open');
     cartOverlay.classList.add('active');
-    renderCart(); // Atualiza a lista sempre que abre
+    renderCart(); 
 }
 
 function closeCart() {
@@ -59,8 +102,8 @@ async function initStore() {
 
         const storeData = storeDoc.data();
         storeNameElement.innerText = storeData.name;
-        storePhoneNumber = storeData.phone;
         document.title = `${storeData.name} - Loja Oficial`;
+        storePhoneNumber = storeData.phone || ""; 
 
         if (storeData.theme_config) {
             const root = document.documentElement;
@@ -75,7 +118,7 @@ async function initStore() {
         }
 
         await loadPublicProducts();
-        updateCartBadge(); // Atualiza a bolinha do carrinho ao carregar a página
+        updateCartBadge(); 
 
     } catch (error) {
         console.error("Erro ao carregar a loja:", error);
@@ -88,7 +131,7 @@ async function loadPublicProducts() {
         const snapshot = await getDocs(productsRef);
 
         productsList.innerHTML = '';
-        publicProductsData = {}; // Limpa a memória
+        publicProductsData = {}; 
 
         if (snapshot.empty) {
             productsList.innerHTML = '<p style="text-align:center; width: 100%; color:#718096;">Esta loja ainda não tem produtos disponíveis.</p>';
@@ -99,7 +142,6 @@ async function loadPublicProducts() {
             const prod = docSnap.data();
             const prodId = docSnap.id;
             
-            // Guarda o produto na memória para o carrinho poder usar
             publicProductsData[prodId] = prod; 
 
             if (prod.is_active !== false) {
@@ -124,17 +166,13 @@ async function loadPublicProducts() {
     }
 }
 
-// --- FUNÇÕES DO CARRINHO ---
-
 window.addToCart = (productId) => {
     const product = publicProductsData[productId];
     if (!product) return;
 
-    // Verifica se o produto já está no carrinho
     const existingItem = cart.find(item => item.id === productId);
 
     if (existingItem) {
-        // Se existir, apenas aumenta a quantidade (respeitando o estoque)
         if (existingItem.quantity < product.stock) {
             existingItem.quantity += 1;
         } else {
@@ -142,7 +180,6 @@ window.addToCart = (productId) => {
             return;
         }
     } else {
-        // Se for novo, adiciona ao array
         cart.push({
             id: productId,
             name: product.name,
@@ -154,7 +191,7 @@ window.addToCart = (productId) => {
     }
 
     saveCart();
-    openCart(); // Abre a gaveta para o cliente ver o que adicionou
+    openCart(); 
 };
 
 window.changeQuantity = (productId, delta) => {
@@ -186,7 +223,6 @@ function saveCart() {
 }
 
 function updateCartBadge() {
-    // Conta o total de itens (somando as quantidades)
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     cartBadge.innerText = totalItems;
 }
@@ -230,86 +266,95 @@ function renderCart() {
     cartTotalPrice.innerText = parseFloat(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-// Botão de Checkout (Por enquanto apenas um alerta, próximo passo será o checkout)
+// LÓGICA DE AUTO-PREENCHIMENTO E GRAVAÇÃO BLINDADA
 btnCheckout.addEventListener('click', () => {
     if (cart.length === 0) {
         alert("O seu carrinho está vazio!");
         return;
     }
-    closeCart(); // Fecha a gaveta do carrinho
-    checkoutModal.style.display = 'flex'; // Abre o formulário de entrega
+
+    if (currentCustomerData) {
+        // Preenche sempre o nome e telefone, caso existam
+        if(document.getElementById('buyer-name')) document.getElementById('buyer-name').value = currentCustomerData.name || '';
+        if(document.getElementById('buyer-phone')) document.getElementById('buyer-phone').value = currentCustomerData.phone || '';
+        
+        // Verifica se a conta tem o objeto de endereço do registo novo
+        if (currentCustomerData.address && typeof currentCustomerData.address === 'object') {
+            const addr = currentCustomerData.address;
+            if(document.getElementById('buyer-cep')) document.getElementById('buyer-cep').value = addr.cep || '';
+            if(document.getElementById('buyer-address')) document.getElementById('buyer-address').value = addr.street || '';
+            if(document.getElementById('buyer-number')) document.getElementById('buyer-number').value = addr.number || '';
+            if(document.getElementById('buyer-complement')) document.getElementById('buyer-complement').value = addr.complement || '';
+            if(document.getElementById('buyer-neighborhood')) document.getElementById('buyer-neighborhood').value = addr.neighborhood || '';
+            if(document.getElementById('buyer-city')) document.getElementById('buyer-city').value = addr.city || '';
+            if(document.getElementById('buyer-state')) document.getElementById('buyer-state').value = addr.state || '';
+        }
+    }
+
+    closeCart(); 
+    checkoutModal.style.display = 'flex'; 
 });
 
 btnCancelCheckout.addEventListener('click', () => {
     checkoutModal.style.display = 'none';
-    openCart(); // Volta para o carrinho se o utilizador desistir
+    openCart(); 
 });
 
 checkoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const btnSubmit = checkoutForm.querySelector('button[type="submit"]');
-    btnSubmit.innerText = "A processar...";
+    btnSubmit.innerText = "A gerar pagamento...";
     btnSubmit.disabled = true;
 
     const buyerName = document.getElementById('buyer-name').value;
     const buyerPhone = document.getElementById('buyer-phone').value;
-    const buyerAddress = document.getElementById('buyer-address').value;
+    const paymentMethod = document.getElementById('payment-method').value;
+
+    const structuredAddress = {
+        cep: document.getElementById('buyer-cep').value,
+        street: document.getElementById('buyer-address').value,
+        number: document.getElementById('buyer-number').value,
+        complement: document.getElementById('buyer-complement').value,
+        neighborhood: document.getElementById('buyer-neighborhood').value,
+        city: document.getElementById('buyer-city').value,
+        state: document.getElementById('buyer-state').value
+    };
 
     let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // 1. Preparar os dados para gravar no Banco de Dados
     const orderData = {
+        customer_id: currentCustomerId || null,
         buyer_name: buyerName,
         buyer_phone: buyerPhone,
-        buyer_address: buyerAddress,
-        items: cart, // Guarda todo o conteúdo do carrinho
+        buyer_address: structuredAddress,
+        payment_method: paymentMethod,
+        payment_status: 'pendente',
+        items: cart, 
         total_amount: total,
-        status: 'novo', // O lojista verá isto no painel
+        status: 'novo', 
         created_at: serverTimestamp()
     };
 
     try {
-        // 2. Gravar o pedido no Firestore na subcoleção 'orders'
-        await addDoc(collection(db, 'stores', storeId, 'orders'), orderData);
+        const docRef = await addDoc(collection(db, 'stores', storeId, 'orders'), orderData);
+        const newOrderId = docRef.id;
         
-        // 3. Gerar a mensagem para o WhatsApp
-        let textMsg = `Olá! Gostaria de fazer um pedido.\n\n*Cliente:* ${buyerName}\n*Endereço:* ${buyerAddress}\n\n*Itens do Pedido:*\n`;
-        
-        // Mantemos uma cópia do carrinho antes de o apagar para montar a mensagem
-        const cartCopy = [...cart]; 
-        
-        cartCopy.forEach(item => {
-            textMsg += `- ${item.quantity}x ${item.name} (R$ ${item.price.toFixed(2)})\n`;
-        });
-        
-        textMsg += `\n*Total a pagar:* R$ ${total.toFixed(2)}`;
-        
-        // Limpa o número de telefone da loja (remove parênteses, traços, etc.)
-        const cleanPhone = storePhoneNumber.replace(/\D/g, '');
-        
-        // Cria a hiperligação oficial da API do WhatsApp
-        const waUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(textMsg)}`;
-        
-        // 4. Limpar o carrinho e a interface
         cart = [];
         saveCart();
         renderCart();
         checkoutForm.reset();
         checkoutModal.style.display = 'none';
 
-        // 5. Redirecionar o cliente
-        alert("Pedido realizado com sucesso! Vamos redirecioná-lo para o WhatsApp da loja para concluir o pagamento.");
-        window.open(waUrl, '_blank');
+        alert(`Pedido #${newOrderId.substring(0,6)} registado com sucesso!\nMétodo: ${paymentMethod.toUpperCase()}.\n\nA aguardar integração do Gateway de Pagamento.`);
         
     } catch (error) {
-        console.error("Erro ao processar o pedido:", error);
-        alert("Ocorreu um erro ao processar o pedido. Tente novamente.");
+        console.error("Erro ao gravar o pedido:", error);
+        alert("Ocorreu um erro. Verifique as regras do Firestore ou se está logado corretamente.");
     } finally {
-        btnSubmit.innerText = "Confirmar e Enviar Pedido";
+        btnSubmit.innerText = "Ir para Pagamento Seguro";
         btnSubmit.disabled = false;
     }
 });
 
-// Inicialização
 initStore();

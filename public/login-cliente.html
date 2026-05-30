@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Área do Cliente</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: var(--bg-color, #0f111a);">
+    
+    <div class="form-panel" style="width: 100%; max-width: 450px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); padding: 3rem 2rem;">
+        <form id="login-client-form">
+            <h2 style="text-align: center;">Área do Cliente</h2>
+            <span class="subtitle" style="text-align: center;">Aceda para acompanhar os seus pedidos.</span>
+
+            <p id="error-message" class="error-message"></p>
+
+            <div class="input-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" placeholder="O seu e-mail" required>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Palavra-passe</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" id="login-button">Entrar na minha conta</button>
+
+            <p class="link-text" style="text-align: center; margin-top: 1.5rem;">
+                Novo por aqui? <a href="registo-cliente.html" id="link-register">Criar conta</a>
+            </p>
+            <p class="link-text" style="text-align: center;">
+                <a href="#" id="link-back-store" style="color: #a0aec0; text-decoration: underline;">Voltar à loja</a>
+            </p>
+        </form>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/login-cliente.js"></script>
+</body>
+</html>

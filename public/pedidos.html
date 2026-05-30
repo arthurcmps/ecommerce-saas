@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Pedidos - Lojista</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/pedidos.css">
+</head>
+<body>
+    <div id="dashboard-content" class="dashboard-container" style="display: none;">
+        
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="top-header">
+                <h1>Gestão de Pedidos</h1>
+                <p style="color: #a0aec0;">Acompanhe e atualize o estado das suas vendas.</p>
+            </header>
+
+            <section class="orders-container">
+                <div id="orders-list" class="orders-grid">
+                    <p style="color: #a0aec0; grid-column: 1 / -1; text-align: center;">A carregar pedidos...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal de Detalhes do Pedido -->
+    <div id="order-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background-color: #1a202c; width: 90%; max-width: 700px; border-radius: 12px; padding: 2rem; border: 1px solid rgba(255,255,255,0.1); position: relative; max-height: 90vh; overflow-y: auto;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                <h2 id="modal-order-title" style="color: #fff;">Detalhes do Pedido</h2>
+                <button id="btn-close-modal" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div class="order-details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                <div class="order-info-block">
+                    <h3 style="color: #a0aec0; font-size: 0.8rem; text-transform: uppercase;">Cliente</h3>
+                    <p id="detail-customer-name" style="color: #fff;"></p>
+                    <p id="detail-customer-phone" style="color: #fff;"></p>
+                </div>
+                <div class="order-info-block">
+                    <h3 style="color: #a0aec0; font-size: 0.8rem; text-transform: uppercase;">Pagamento</h3>
+                    <p id="detail-payment-method" style="color: #68d391; font-weight: bold; text-transform: uppercase;"></p>
+                    <p id="detail-payment-status" style="color: #fff; text-transform: capitalize;"></p>
+                </div>
+                <div class="order-info-block">
+                    <h3 style="color: #a0aec0; font-size: 0.8rem; text-transform: uppercase;">Morada de Entrega</h3>
+                    <p id="detail-customer-address" style="color: #fff; white-space: pre-wrap; line-height: 1.4;"></p>
+                </div>
+            </div>
+
+            <h3 style="color: #fff; margin: 1.5rem 0 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Itens Comprados</h3>
+            <div id="detail-items-list" class="order-items-list">
+                <!-- Os itens aparecem aqui -->
+            </div>
+
+            <div class="order-total-block" style="display: flex; justify-content: space-between; margin-top: 1.5rem; font-size: 1.2rem; font-weight: bold; color: #ed8936;">
+                <span>Total do Pedido:</span>
+                <span id="detail-total-price">R$ 0,00</span>
+            </div>
+
+            <h3 style="color: #fff; margin: 1.5rem 0 1rem;">Estado do Pedido</h3>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <select id="order-status-select" style="flex: 1; padding: 0.8rem; border-radius: 8px; background-color: #2d3748; color: #fff; border: 1px solid #4a5568; outline: none;">
+                    <option value="novo">Novo Pedido</option>
+                    <option value="processamento">Em Processamento</option>
+                    <option value="enviado">Enviado</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+                <button id="btn-update-status" class="primary-btn">Atualizar Estado</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/pedidos.js"></script>
+</body>
+</html>
