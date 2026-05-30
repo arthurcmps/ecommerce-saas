@@ -73,9 +73,14 @@ async function loadPublicProducts() {
             
             // Renderiza apenas se o produto estiver marcado como ativo
             if (prod.is_active !== false) {
+                const imgHtml = prod.image_url 
+                    ? `<img src="${prod.image_url}" alt="${prod.name}" style="width: 100%; height: 250px; object-fit: cover; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: -1.5rem -1.5rem 1rem -1.5rem;">`
+                    : `<div style="width: calc(100% + 3rem); height: 250px; background-color: #e2e8f0; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: -1.5rem -1.5rem 1rem -1.5rem; display: flex; align-items: center; justify-content: center; color: #a0aec0;">Sem foto</div>`;
+
                 const card = document.createElement('div');
                 card.className = 'public-product-card';
                 card.innerHTML = `
+                    ${imgHtml}
                     <h4>${prod.name}</h4>
                     <span class="price">${parseFloat(prod.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                     <p class="desc">${prod.description}</p>

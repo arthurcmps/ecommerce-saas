@@ -1,10 +1,10 @@
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { auth, db } from "./firebase-config.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { auth, db, storage } from "./firebase-config.js";
+import { renderSidebar, updateSidebarData } from "./sidebar.js";
 
 const dashboardContent = document.getElementById('dashboard-content');
-const storeNameDisplay = document.getElementById('store-name-display');
-const logoutButton = document.getElementById('logout-button');
 const btnOpenModal = document.getElementById('btn-open-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
 const modal = document.getElementById('product-modal');
@@ -13,13 +13,15 @@ const productsList = document.getElementById('products-list');
 const modalTitle = document.getElementById('modal-title');
 
 let currentUserId = null;
-let loadedProducts = {}; // Guarda os produtos na memória para facilitar a edição
-let editingProductId = null; // Controla se estamos adicionando ou editando
+let loadedProducts = {}; 
+let editingProductId = null; 
 
-// Limpa o modal para Adicionar Novo
+renderSidebar('produtos');
+
 btnOpenModal.addEventListener('click', () => {
     editingProductId = null;
     addProductForm.reset();
+    document.getElementById('prod-image').value = ""; 
     modalTitle.innerText = "Adicionar Novo Produto";
     modal.style.display = 'flex';
 });
@@ -33,7 +35,7 @@ onAuthStateChanged(auth, async (user) => {
 
         const storeDoc = await getDoc(doc(db, 'stores', user.uid));
         if (storeDoc.exists()) {
-            storeNameDisplay.innerText = storeDoc.data().name;
+            updateSidebarData(storeDoc.data().name, user.uid);
         }
         loadProducts();
     } else {
@@ -43,7 +45,7 @@ onAuthStateChanged(auth, async (user) => {
 
 async function loadProducts() {
     productsList.innerHTML = '<p style="color: #a0aec0; text-align: center; grid-column: 1 / -1;">Carregando o estoque...</p>';
-    loadedProducts = {}; // Reseta a memória
+    loadedProducts = {}; 
 
     try {
         const productsRef = collection(db, 'stores', currentUserId, 'products');
@@ -59,11 +61,16 @@ async function loadProducts() {
         snapshot.forEach((docSnap) => {
             const prod = docSnap.data();
             const prodId = docSnap.id;
-            loadedProducts[prodId] = prod; // Salva o produto na memória pelo ID
+            loadedProducts[prodId] = prod; 
+
+            const imgHtml = prod.image_url 
+                ? `<img src="${prod.image_url}" alt="${prod.name}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 4px; margin-bottom: 1rem;">`
+                : `<div style="width: 100%; height: 180px; background-color: #2d3748; border-radius: 4px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; color: #a0aec0;">Sem foto</div>`;
 
             const card = document.createElement('div');
             card.className = 'product-card';
             card.innerHTML = `
+                ${imgHtml}
                 <h3>${prod.name}</h3>
                 <span class="price">${parseFloat(prod.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                 <span class="stock">Estoque: ${prod.stock} un.</span>
@@ -75,14 +82,12 @@ async function loadProducts() {
             `;
             productsList.appendChild(card);
         });
-
     } catch (error) {
         console.error("Erro ao carregar produtos:", error);
         productsList.innerHTML = '<p style="color: #e53e3e; grid-column: 1 / -1;">Erro ao carregar os produtos.</p>';
     }
 }
 
-// Transformamos em globais (window) para funcionar com o onclick do HTML injetado
 window.editProduct = (id) => {
     editingProductId = id;
     const prod = loadedProducts[id];
@@ -91,6 +96,7 @@ window.editProduct = (id) => {
     document.getElementById('prod-price').value = prod.price;
     document.getElementById('prod-stock').value = prod.stock;
     document.getElementById('prod-desc').value = prod.description;
+    document.getElementById('prod-image').value = "";
 
     if(prod.shipping_dimensions) {
         document.getElementById('prod-weight').value = prod.shipping_dimensions.weight_kg;
@@ -107,7 +113,7 @@ window.deleteProduct = async (id) => {
     if(confirm("Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.")) {
         try {
             await deleteDoc(doc(db, 'stores', currentUserId, 'products', id));
-            loadProducts(); // Recarrega a grade após exclusão
+            loadProducts(); 
         } catch (error) {
             console.error("Erro ao excluir:", error);
             alert("Erro ao excluir o produto.");
@@ -120,34 +126,49 @@ addProductForm.addEventListener('submit', async (e) => {
     
     const btnSave = document.getElementById('btn-save-product');
     const originalText = btnSave.innerText;
-    btnSave.innerText = "Salvando...";
+    btnSave.innerText = "Processando..."; 
     btnSave.disabled = true;
 
-    const productData = {
-        name: document.getElementById('prod-name').value,
-        price: Number(document.getElementById('prod-price').value),
-        stock: Number(document.getElementById('prod-stock').value),
-        description: document.getElementById('prod-desc').value,
-        shipping_dimensions: {
-            weight_kg: Number(document.getElementById('prod-weight').value),
-            length_cm: Number(document.getElementById('prod-length').value),
-            width_cm: Number(document.getElementById('prod-width').value),
-            height_cm: Number(document.getElementById('prod-height').value)
-        }
-    };
+    let finalImageUrl = editingProductId && loadedProducts[editingProductId].image_url 
+        ? loadedProducts[editingProductId].image_url 
+        : null;
 
     try {
+        const imageInput = document.getElementById('prod-image');
+        
+        if (imageInput.files.length > 0) {
+            const file = imageInput.files[0];
+            const storageRef = ref(storage, `stores/${currentUserId}/products/${Date.now()}_${file.name}`);
+            const uploadResult = await uploadBytes(storageRef, file);
+            finalImageUrl = await getDownloadURL(uploadResult.ref);
+        }
+
+        btnSave.innerText = "Salvando dados...";
+
+        const productData = {
+            name: document.getElementById('prod-name').value,
+            price: Number(document.getElementById('prod-price').value),
+            stock: Number(document.getElementById('prod-stock').value),
+            description: document.getElementById('prod-desc').value,
+            image_url: finalImageUrl, 
+            shipping_dimensions: {
+                weight_kg: Number(document.getElementById('prod-weight').value),
+                length_cm: Number(document.getElementById('prod-length').value),
+                width_cm: Number(document.getElementById('prod-width').value),
+                height_cm: Number(document.getElementById('prod-height').value)
+            }
+        };
+
         if (editingProductId) {
-            // Modo Edição: Atualiza o documento existente
             await updateDoc(doc(db, 'stores', currentUserId, 'products', editingProductId), productData);
         } else {
-            // Modo Criação: Adiciona um novo documento
             productData.is_active = true;
             productData.created_at = serverTimestamp();
             await addDoc(collection(db, 'stores', currentUserId, 'products'), productData);
         }
 
         addProductForm.reset();
+        document.getElementById('prod-image').value = ""; 
         modal.style.display = 'none';
         loadProducts();
 
@@ -159,5 +180,3 @@ addProductForm.addEventListener('submit', async (e) => {
         btnSave.disabled = false;
     }
 });
-
-logoutButton.addEventListener('click', () => signOut(auth));

@@ -11,20 +11,7 @@
 <body>
     <div id="dashboard-content" class="dashboard-container" style="display: none;">
         
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2 id="store-name-display">A carregar...</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="dashboard.html">Visão Geral</a>
-                <a href="produtos.html" class="active">Gerir Produtos</a>
-                <a href="#">Pedidos</a>
-                <a href="#">Personalizar Design</a>
-            </nav>
-            <div class="sidebar-footer">
-                <button id="logout-button">Terminar Sessão</button>
-            </div>
-        </aside>
+        <div id="sidebar-container"></div>
 
         <main class="main-content">
             <header class="top-header">
@@ -66,6 +53,11 @@
                 <div class="input-group">
                     <label for="prod-desc">Descrição</label>
                     <textarea id="prod-desc" rows="3" placeholder="Detalhes do material, tamanho, etc..." required></textarea>
+                </div>
+
+                <div class="input-group" style="margin-top: 1rem;">
+                    <label for="prod-image">Fotografia do Produto</label>
+                    <input type="file" id="prod-image" accept="image/png, image/jpeg, image/webp" style="padding: 0.5rem;">
                 </div>
 
                 <h3 style="color: #a0aec0; font-size: 0.9rem; margin-top: 0.5rem;">Dados Logísticos (Ocultos do Cliente)</h3>

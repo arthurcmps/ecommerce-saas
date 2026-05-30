@@ -7,6 +7,10 @@
     color: #fff;
 }
 
+#sidebar-container {
+    display: contents;
+}
+
 /* Barra Lateral */
 .sidebar {
     width: 250px;

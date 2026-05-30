@@ -1,12 +1,9 @@
-// js/design.js
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { auth, db } from "./firebase-config.js";
+import { renderSidebar, updateSidebarData } from "./sidebar.js";
 
 const dashboardContent = document.getElementById('dashboard-content');
-const storeNameDisplay = document.getElementById('store-name-display');
-const logoutButton = document.getElementById('logout-button');
-
 const designForm = document.getElementById('design-form');
 const primaryColorInput = document.getElementById('primary-color');
 const secondaryColorInput = document.getElementById('secondary-color');
@@ -17,16 +14,11 @@ const btnSaveDesign = document.getElementById('btn-save-design');
 
 let currentUserId = null;
 
-// Atualiza os textos hexadecimais em tempo real quando o utilizador muda a cor
-primaryColorInput.addEventListener('input', (e) => {
-    primaryHexDisplay.innerText = e.target.value;
-});
+renderSidebar('design');
 
-secondaryColorInput.addEventListener('input', (e) => {
-    secondaryHexDisplay.innerText = e.target.value;
-});
+primaryColorInput.addEventListener('input', (e) => primaryHexDisplay.innerText = e.target.value);
+secondaryColorInput.addEventListener('input', (e) => secondaryHexDisplay.innerText = e.target.value);
 
-// 1. Verificar Autenticação e Carregar Dados Iniciais
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
@@ -38,9 +30,8 @@ onAuthStateChanged(auth, async (user) => {
             
             if (storeDoc.exists()) {
                 const storeData = storeDoc.data();
-                storeNameDisplay.innerText = storeData.name;
+                updateSidebarData(storeData.name, user.uid);
 
-                // Se já existir um theme_config, preenchemos os campos
                 if (storeData.theme_config) {
                     primaryColorInput.value = storeData.theme_config.primary_color || "#1A202C";
                     primaryHexDisplay.innerText = primaryColorInput.value;
@@ -56,13 +47,11 @@ onAuthStateChanged(auth, async (user) => {
         } catch (error) {
             console.error("Erro ao carregar as configurações de design:", error);
         }
-
     } else {
         window.location.href = "index.html";
     }
 });
 
-// 2. Guardar as Novas Definições no Firestore
 designForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -73,7 +62,6 @@ designForm.addEventListener('submit', async (e) => {
     try {
         const storeDocRef = doc(db, 'stores', currentUserId);
         
-        // Usamos updateDoc para não sobrescrever os outros dados da loja (como endereço, nome, etc.)
         await updateDoc(storeDocRef, {
             theme_config: {
                 primary_color: primaryColorInput.value,
@@ -85,7 +73,6 @@ designForm.addEventListener('submit', async (e) => {
         });
 
         alert("Design atualizado com sucesso!");
-
     } catch (error) {
         console.error("Erro ao atualizar o design:", error);
         alert("Ocorreu um erro ao guardar as alterações.");
@@ -94,6 +81,3 @@ designForm.addEventListener('submit', async (e) => {
         btnSaveDesign.disabled = false;
     }
 });
-
-// Logout
-logoutButton.addEventListener('click', () => signOut(auth));
