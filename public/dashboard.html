@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controlo - Lojista</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div id="dashboard-content" class="dashboard-container" style="display: none;">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 id="store-name-display">A carregar...</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active">Visão Geral</a>
+                <a href="produtos.html">Gerir Produtos</a>
+                <a href="#">Pedidos</a>
+                <a href="design.html">Personalizar Design</a>
+                <a href="#">Configurações</a>
+                <a href="loja.html" id="link-my-store" target="_blank" style="margin-top: 2rem; color: #fff; background-color: rgba(255,255,255,0.1);">👁️ Ver Minha Loja</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logout-button">Terminar Sessão</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <h1>Visão Geral da Loja</h1>
+                <div class="user-profile">
+                    <span id="user-email">...</span>
+                </div>
+            </header>
+
+            <section class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Vendas Hoje</h3>
+                    <p class="metric-value">R$   0,00</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Pedidos Pendentes</h3>
+                    <p class="metric-value">0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Produtos Ativos</h3>
+                    <p class="metric-value">0</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

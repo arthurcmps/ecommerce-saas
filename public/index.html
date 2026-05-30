@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Painel do Lojista</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <div class="visual-panel">
+            <h1>Painel do Lojista</h1>
+            <p>Acesse o centro de controle da sua loja virtual. Gerencie estoque, pedidos e personalize seu e-commerce.</p>
+        </div>
+
+        <div class="form-panel">
+            <form id="login-form">
+                <h2>Bem-vindo de volta</h2>
+                <span class="subtitle">Insira suas credenciais para acessar.</span>
+
+                <p id="error-message" class="error-message"></p>
+
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" placeholder="seu@email.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" id="login-button">Entrar</button>
+
+                <p class="link-text">Ainda não tem uma loja? <a href="register.html">Cadastre-se</a></p>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/login.js"></script>
+</body>
+</html>

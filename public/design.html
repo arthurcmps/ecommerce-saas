@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalizar Design - Lojista</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/design.css">
+</head>
+<body>
+    <div id="dashboard-content" class="dashboard-container" style="display: none;">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 id="store-name-display">A carregar...</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">Visão Geral</a>
+                <a href="produtos.html">Gerir Produtos</a>
+                <a href="#">Pedidos</a>
+                <a href="design.html" class="active">Personalizar Design</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logout-button">Terminar Sessão</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <h1>Identidade Visual</h1>
+                <p style="color: #a0aec0;">Configure as cores e o layout da sua vitrine pública.</p>
+            </header>
+
+            <section class="design-container">
+                <div class="design-card">
+                    <form id="design-form">
+                        <h3>Cores da Marca</h3>
+                        <p class="section-desc">Estas cores serão aplicadas nos botões, cabeçalhos e destaques da sua loja.</p>
+                        
+                        <div class="color-pickers-row">
+                            <div class="input-group color-group">
+                                <label for="primary-color">Cor Principal</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="primary-color" required>
+                                    <span id="primary-hex" class="hex-display">#000000</span>
+                                </div>
+                            </div>
+
+                            <div class="input-group color-group">
+                                <label for="secondary-color">Cor Secundária</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="secondary-color" required>
+                                    <span id="secondary-hex" class="hex-display">#000000</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 style="margin-top: 2rem;">Estrutura da Loja</h3>
+                        <p class="section-desc">Como prefere que os seus produtos sejam exibidos?</p>
+                        
+                        <div class="input-group">
+                            <label for="vitrine-style">Estilo da Vitrine</label>
+                            <select id="vitrine-style" required>
+                                <option value="grid">Grelha Clássica (Lado a lado)</option>
+                                <option value="carousel">Carrossel (Deslizante)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" id="btn-save-design" class="primary-btn" style="margin-top: 2rem;">Guardar Alterações</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/design.js"></script>
+</body>
+</html>

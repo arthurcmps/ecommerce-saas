@@ -1,0 +1,57 @@
+/* css/loja.css */
+:root {
+    /* Cores padrão caso a loja ainda não tenha configurado o design */
+    --primary-color: #1a202c; 
+    --secondary-color: #ed8936; 
+    --bg-color: #f7fafc;
+    --text-color: #2d3748;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+body { background-color: var(--bg-color); color: var(--text-color); }
+
+.store-container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+.store-header { background-color: var(--primary-color); color: #ffffff; padding: 1.5rem 0; }
+
+.header-content { display: flex; justify-content: space-between; align-items: center; }
+
+.store-header nav a { color: #ffffff; text-decoration: none; margin-left: 1.5rem; font-weight: bold; transition: opacity 0.3s;}
+.store-header nav a:hover { opacity: 0.8; }
+
+.store-hero { background-color: var(--secondary-color); color: #ffffff; padding: 4rem 0; text-align: center; }
+.store-hero h2 { font-size: 2.5rem; margin-bottom: 1rem; }
+
+.section-title { text-align: center; font-size: 2rem; margin-bottom: 3rem; color: var(--primary-color); }
+
+/* Layout 1: Grelha Clássica */
+.vitrine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; }
+
+/* Layout 2: Carrossel Deslizante */
+.vitrine-carousel { display: flex; overflow-x: auto; gap: 2rem; padding-bottom: 1.5rem; scroll-snap-type: x mandatory; }
+.vitrine-carousel .public-product-card { min-width: 300px; scroll-snap-align: start; }
+/* Estilo da barra de rolagem do carrossel */
+.vitrine-carousel::-webkit-scrollbar { height: 8px; }
+.vitrine-carousel::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; }
+
+/* Cartões de Produto */
+.public-product-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 4px solid var(--primary-color);
+    transition: transform 0.3s;
+}
+
+.public-product-card:hover { transform: translateY(-5px); }
+
+.public-product-card h4 { font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--text-color); }
+.public-product-card .price { font-size: 1.5rem; font-weight: bold; color: var(--secondary-color); margin: 0.5rem 0 1rem; }
+.public-product-card .desc { color: #718096; font-size: 0.9rem; flex-grow: 1; margin-bottom: 1.5rem; line-height: 1.5; }
+
+.btn-buy { background-color: var(--primary-color); color: #ffffff; border: none; padding: 1rem; border-radius: 4px; cursor: pointer; font-weight: bold; transition: opacity 0.3s; width: 100%; }
+.btn-buy:hover { opacity: 0.9; }

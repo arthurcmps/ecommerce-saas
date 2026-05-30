@@ -1,0 +1,92 @@
+/* css/design.css */
+
+.design-container {
+    padding: 2rem;
+    max-width: 800px;
+}
+
+.design-card {
+    background-color: #1a202c;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.design-card h3 {
+    color: #fff;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.section-desc {
+    color: #a0aec0;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.color-pickers-row {
+    display: flex;
+    gap: 2rem;
+}
+
+.color-group {
+    flex: 1;
+}
+
+.color-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: #2d3748;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid #2d3748;
+}
+
+/* Estilizando o seletor de cor nativo */
+input[type="color"] {
+    -webkit-appearance: none;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+    background: none;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+.hex-display {
+    color: #fff;
+    font-family: monospace;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+
+/* Estilizando o campo Select */
+select {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #2d3748;
+    background-color: #2d3748;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+select:focus {
+    border-color: #ed8936;
+}

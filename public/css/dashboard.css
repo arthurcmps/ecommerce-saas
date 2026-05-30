@@ -1,0 +1,120 @@
+/* css/dashboard.css */
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    background-color: #0f111a;
+    color: #fff;
+}
+
+/* Barra Lateral */
+.sidebar {
+    width: 250px;
+    background-color: #1a202c;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 2rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h2 {
+    color: #ed8936;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 0;
+}
+
+.sidebar-nav a {
+    padding: 1rem 1.5rem;
+    color: #a0aec0;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.sidebar-nav a:hover, .sidebar-nav a.active {
+    background-color: rgba(237, 137, 54, 0.1);
+    color: #ed8936;
+    border-left: 4px solid #ed8936;
+}
+
+.sidebar-footer {
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#logout-button {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: transparent;
+    border: 1px solid #e53e3e;
+    color: #e53e3e;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 0;
+}
+
+#logout-button:hover {
+    background-color: #e53e3e;
+    color: #fff;
+}
+
+/* Área de Conteúdo Central */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    background-color: #1a202c;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-profile {
+    color: #a0aec0;
+    font-size: 0.9rem;
+}
+
+/* Grelha de Métricas */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.metric-card {
+    background-color: #1a202c;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.metric-card h3 {
+    color: #a0aec0;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #fff;
+}
