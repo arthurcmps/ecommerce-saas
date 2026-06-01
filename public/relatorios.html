@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Lojista</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <style>
+        .filter-bar { background-color: #1a202c; padding: 1.5rem; border-radius: 12px; border: 1px solid #2d3748; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 2rem; }
+        .filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .filter-group label { color: #a0aec0; font-size: 0.85rem; }
+        .filter-group input, .filter-group select { padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid #4a5568; background-color: #2d3748; color: #fff; outline: none; }
+        
+        .export-actions { display: flex; gap: 1rem; margin-top: auto; margin-left: auto; }
+        .btn-export { padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
+        .btn-csv { background-color: #48bb78; color: #fff; }
+        .btn-csv:hover { background-color: #38a169; }
+        .btn-print { background-color: #4299e1; color: #fff; }
+        .btn-print:hover { background-color: #3182ce; }
+
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 1rem; background-color: #1a202c; border-radius: 12px; overflow: hidden; border: 1px solid #2d3748; }
+        .report-table th, .report-table td { padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; }
+        .report-table th { background-color: #2d3748; color: #a0aec0; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; }
+
+        /* MAGIA DE IMPRESSÃO: Oculta a interface escura e menus na hora de gerar o PDF */
+        @media print {
+            body { background-color: #fff !important; color: #000 !important; }
+            #sidebar-container, .filter-bar, .top-header p { display: none !important; }
+            .dashboard-container { display: block !important; }
+            .main-content { margin: 0 !important; padding: 0 !important; }
+            .report-table { border: 1px solid #ccc; }
+            .report-table th { background-color: #f7fafc !important; color: #000 !important; border-bottom: 2px solid #000; }
+            .report-table td { color: #000 !important; border-bottom: 1px solid #ccc; }
+            h1 { color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="dashboard-content" class="dashboard-container" style="display: none;">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header class="top-header">
+                <h1>Relatórios de Vendas</h1>
+                <p style="color: #a0aec0;">Filtre, exporte para Excel (CSV) ou imprima o seu faturamento.</p>
+            </header>
+
+            <section class="filter-bar">
+                <div class="filter-group">
+                    <label>Data Inicial</label>
+                    <input type="date" id="filter-start">
+                </div>
+                <div class="filter-group">
+                    <label>Data Final</label>
+                    <input type="date" id="filter-end">
+                </div>
+                <div class="filter-group">
+                    <label>Estado do Pedido</label>
+                    <select id="filter-status">
+                        <option value="todos">Todos</option>
+                        <option value="novo">Novo Pedido</option>
+                        <option value="processamento">Em Processamento</option>
+                        <option value="enviado">Enviado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <button id="btn-apply-filters" class="primary-btn" style="margin-top: auto; height: 38px;">Aplicar Filtros</button>
+
+                <div class="export-actions">
+                    <button id="btn-export-csv" class="btn-export btn-csv">📥 Baixar Excel (CSV)</button>
+                    <button id="btn-print-pdf" class="btn-export btn-print">🖨️ Imprimir / PDF</button>
+                </div>
+            </section>
+
+            <!-- Resumo Rápido Pós-Filtro -->
+            <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem; padding: 1rem; background-color: rgba(237, 137, 54, 0.1); border: 1px solid #ed8936; border-radius: 8px;">
+                <div><span style="color: #a0aec0; font-size: 0.9rem;">Receita Produtos:</span> <strong id="summary-revenue" style="color: #ed8936; font-size: 1.2rem;">R$ 0,00</strong></div>
+                <div><span style="color: #a0aec0; font-size: 0.9rem;">Total Frete:</span> <strong id="summary-freight" style="color: #fff; font-size: 1.2rem;">R$ 0,00</strong></div>
+                <div><span style="color: #a0aec0; font-size: 0.9rem;">Total Bruto:</span> <strong id="summary-total" style="color: #68d391; font-size: 1.2rem;">R$ 0,00</strong></div>
+            </div>
+
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Pagamento</th>
+                        <th>Receita Prod.</th>
+                        <th>Frete</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="report-table-body">
+                    <tr><td colspan="7" style="text-align: center;">A carregar dados...</td></tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/relatorios.js"></script>
+</body>
+</html>

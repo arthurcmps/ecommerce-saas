@@ -1,6 +1,4 @@
-// js/loja.js
-import { doc, getDoc, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { doc, getDoc, collection, getDocs, addDoc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { db, auth } from "./firebase-config.js";
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -449,9 +447,20 @@ checkoutForm.addEventListener('submit', async (e) => {
     };
 
     try {
+        // 1. Grava o pedido na coleção 'orders'
         const docRef = await addDoc(collection(db, 'stores', storeId, 'orders'), orderData);
         const newOrderId = docRef.id;
         
+        // 2. BAIXA AUTOMÁTICA DE ESTOQUE (A Mágica)
+        for (const item of cart) {
+            const productRef = doc(db, 'stores', storeId, 'products', item.id);
+            await updateDoc(productRef, {
+                // Passamos o valor negativo da quantidade para deduzir do estoque atual
+                stock: increment(-item.quantity)
+            });
+        }
+        
+        // 3. Limpa o carrinho e a interface
         cart = [];
         saveCart();
         renderCart();
@@ -460,8 +469,11 @@ checkoutForm.addEventListener('submit', async (e) => {
 
         alert(`Pedido #${newOrderId.substring(0,6)} registado com sucesso!\nForma de Envio: ${freteMetodo}\nMétodo de Pagamento: ${paymentMethod.toUpperCase()}\nTotal: R$ ${totalComFrete.toFixed(2).replace('.', ',')}\n\nA aguardar integração do Gateway de Pagamento.`);
         
+        // Recarrega os produtos na vitrine para atualizar os stocks visuais imediatamente
+        loadPublicProducts();
+
     } catch (error) {
-        console.error("Erro ao gravar o pedido:", error);
+        console.error("Erro ao gravar o pedido e baixar estoque:", error);
         alert("Ocorreu um erro. Verifique a sua ligação.");
     } finally {
         btnSubmit.innerText = originalText;

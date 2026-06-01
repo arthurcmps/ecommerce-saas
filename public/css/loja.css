@@ -137,3 +137,29 @@ body { background-color: var(--bg-color); color: var(--text-color); }
 .cart-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem; color: var(--text-color); }
 .btn-checkout { width: 100%; padding: 1rem; background-color: var(--secondary-color); color: #fff; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
 .btn-checkout:hover { opacity: 0.9; }
+
+/* Ajuste de Proporção para os Ícones e Botões do Cabeçalho */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-nav a, .cart-toggle-btn {
+    font-size: 0.95rem; /* Reduz o tamanho do texto */
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem; /* Espaço entre o ícone e o texto */
+}
+
+/* Se estiver a usar emojis ou ícones SVG/IMG dentro dos botões */
+.cart-toggle-btn svg, 
+.cart-toggle-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+.cart-badge {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+}

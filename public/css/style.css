@@ -31,7 +31,7 @@ body {
 
 @media (min-width: 768px) {
     .visual-panel {
-        display: flex; /* Só aparece em telas de computador */
+        display: flex; 
     }
 }
 
@@ -86,10 +86,9 @@ form h2 {
     font-size: 0.9rem;
 }
 
-/* Aplicando o mesmo estilo para inputs e textareas */
 .input-group input, 
 .input-group textarea {
-    width: 100%; /* Garante que os campos não vazem da caixa */
+    width: 100%; 
     padding: 1rem;
     border-radius: 8px;
     border: 1px solid #2d3748;
@@ -97,8 +96,8 @@ form h2 {
     color: #fff;
     font-size: 1rem;
     outline: none;
-    font-family: inherit; /* Usa a mesma fonte do resto do site */
-    resize: vertical; /* Permite aumentar a caixa apenas para baixo */
+    font-family: inherit; 
+    resize: vertical; 
 }
 
 .input-group input:focus, 
@@ -127,7 +126,7 @@ button:hover {
     color: #e53e3e;
     font-size: 0.875rem;
     text-align: center;
-    display: none; /* Escondido por padrão */
+    display: none; 
 }
 
 .link-text {
@@ -142,7 +141,6 @@ button:hover {
     font-weight: bold;
 }
 
-/* Agrupamento de inputs lado a lado para o formulário de cadastro e modal */
 .input-row {
     display: flex;
     gap: 1rem;
@@ -150,10 +148,9 @@ button:hover {
 }
 
 .input-row .input-group {
-    flex: 1; /* Faz os campos dividirem o espaço igualmente */
+    flex: 1; 
 }
 
-/* Botões de Ação do Produto */
 .card-actions {
     display: flex;
     gap: 1rem;
@@ -191,4 +188,37 @@ button:hover {
 .btn-delete:hover {
     background-color: #e53e3e;
     color: #fff;
+}
+
+/* --- REGRAS GLOBAIS DE AJUSTE DE ÍCONES E BOTÕES --- */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-nav a, 
+.cart-toggle-btn,
+.nav-link {
+    font-size: 0.95rem; 
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem; 
+    text-decoration: none;
+}
+
+/* Impede que imagens e SVGs dentro de navegação fiquem gigantes */
+.header-nav svg, 
+.header-nav img,
+.cart-toggle-btn svg, 
+.cart-toggle-btn img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.cart-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
 }

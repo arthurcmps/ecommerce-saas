@@ -6,7 +6,7 @@ import { renderSidebar, updateSidebarData } from "./sidebar.js";
 
 const dashboardContent = document.getElementById('dashboard-content');
 const ordersList = document.getElementById('orders-list');
-const searchInput = document.getElementById('search-orders');
+const searchInput = document.getElementById('search-orders'); // Captura da Busca
 
 const modal = document.getElementById('order-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
@@ -92,7 +92,7 @@ window.openOrderDetails = (orderId) => {
 
     document.getElementById('modal-order-title').innerText = `Pedido de ${order.buyer_name || 'Desconhecido'}`;
     document.getElementById('detail-customer-name').innerText = order.buyer_name || 'Desconhecido';
-    document.getElementById('detail-customer-phone').innerText = order.buyer_phone || 'Sem contacto';
+    document.getElementById('detail-customer-phone').innerText = order.buyer_phone || 'Sem contato';
     
     // Morada de Entrega
     let addressText = 'Morada não informada';
@@ -175,24 +175,39 @@ btnUpdateStatus.addEventListener('click', async () => {
         btnUpdateStatus.innerText = originalText;
         btnUpdateStatus.disabled = false;
     }
-
-    // --- SISTEMA DE BUSCA EM TEMPO REAL ---
-    if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const cards = ordersList.querySelectorAll('.order-card');
-                
-                cards.forEach(card => {
-                    // Pega todo o texto dentro do cartão (nome, data, preço, estado)
-                    const cardText = card.innerText.toLowerCase();
-                    
-                    // Se o texto digitado existir dentro do cartão, mostra-o. Se não, oculta-o.
-                    if (cardText.includes(term)) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-        });
-     }
 });
+
+// --- SISTEMA DE BUSCA EM TEMPO REAL ---
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const cards = ordersList.querySelectorAll('.order-card');
+        let hasVisibleCards = false;
+        
+        cards.forEach(card => {
+            const cardText = card.innerText.toLowerCase();
+            if (cardText.includes(term)) {
+                card.style.display = 'flex';
+                hasVisibleCards = true;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Feedback visual caso a busca não encontre nada
+        let noResultsMsg = document.getElementById('no-results-msg');
+        if (!hasVisibleCards && cards.length > 0) {
+            if (!noResultsMsg) {
+                noResultsMsg = document.createElement('p');
+                noResultsMsg.id = 'no-results-msg';
+                noResultsMsg.style = "color: #a0aec0; text-align: center; grid-column: 1 / -1;";
+                noResultsMsg.innerText = "Nenhum pedido encontrado com este termo.";
+                ordersList.appendChild(noResultsMsg);
+            } else {
+                noResultsMsg.style.display = 'block';
+            }
+        } else if (noResultsMsg) {
+            noResultsMsg.style.display = 'none';
+        }
+    });
+}

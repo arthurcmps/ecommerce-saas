@@ -12,16 +12,66 @@ const addProductForm = document.getElementById('add-product-form');
 const productsList = document.getElementById('products-list');
 const modalTitle = document.getElementById('modal-title');
 
+// Novos elementos dinâmicos
+const categorySelect = document.getElementById('product-category');
+const attributesContainer = document.getElementById('dynamic-attributes-container');
+
 let currentUserId = null;
 let loadedProducts = {}; 
 let editingProductId = null; 
 
+// Dicionário de Variações
+const categoryTemplates = {
+    roupas: { title: "Tamanhos Disponíveis", options: ["PP", "P", "M", "G", "GG", "XG"] },
+    calcados: { title: "Numerações Disponíveis", options: ["34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44"] },
+    eletronicos: { title: "Voltagem", options: ["110V", "220V", "Bivolt"] },
+    suplementos: { title: "Pesos / Tamanhos", options: ["150g", "250g", "500g", "1kg", "2kg", "3kg"] },
+    acessorios: { title: "Cores/Modelos", options: ["Preto", "Branco", "Prata", "Dourado", "Colorido"] }
+};
+
 renderSidebar('produtos');
+
+// Função para desenhar os filtros na tela
+function renderAttributes(category, selectedVars = []) {
+    if (category === 'padrao' || !category) {
+        attributesContainer.style.display = 'none';
+        attributesContainer.innerHTML = '';
+        return;
+    }
+
+    const template = categoryTemplates[category];
+    if (template) {
+        let html = `<h4 style="color: #ed8936; margin-bottom: 0.8rem; font-size: 0.9rem;">${template.title}</h4>`;
+        html += `<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">`;
+        
+        template.options.forEach(opt => {
+            const isChecked = selectedVars.includes(opt) ? "checked" : "";
+            html += `
+                <label style="background-color: #2d3748; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; border: 1px solid #4a5568; display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="product-variation" value="${opt}" ${isChecked}>
+                    <span style="color: #e2e8f0; font-size: 0.9rem;">${opt}</span>
+                </label>
+            `;
+        });
+        html += `</div>`;
+        
+        attributesContainer.innerHTML = html;
+        attributesContainer.style.display = 'block';
+    }
+}
+
+// Ouve as mudanças de categoria ao cadastrar
+if (categorySelect) {
+    categorySelect.addEventListener('change', (e) => {
+        renderAttributes(e.target.value);
+    });
+}
 
 btnOpenModal.addEventListener('click', () => {
     editingProductId = null;
     addProductForm.reset();
     document.getElementById('prod-image').value = ""; 
+    renderAttributes('padrao'); // Limpa os filtros
     modalTitle.innerText = "Adicionar Novo Produto";
     modal.style.display = 'flex';
 });
@@ -96,6 +146,11 @@ window.editProduct = (id) => {
     document.getElementById('prod-price').value = prod.price;
     document.getElementById('prod-stock').value = prod.stock;
     document.getElementById('prod-desc').value = prod.description;
+    
+    // Configura a categoria salva e renderiza os filtros correspondentes
+    categorySelect.value = prod.category || 'padrao';
+    renderAttributes(prod.category || 'padrao', prod.available_variations || []);
+
     document.getElementById('prod-image').value = "";
 
     if(prod.shipping_dimensions) {
@@ -145,10 +200,17 @@ addProductForm.addEventListener('submit', async (e) => {
 
         btnSave.innerText = "Salvando dados...";
 
+        // Recolher dados das variações
+        const selectedCategory = categorySelect.value;
+        const variationsCheckboxes = document.querySelectorAll('input[name="product-variation"]:checked');
+        const selectedVariations = Array.from(variationsCheckboxes).map(cb => cb.value);
+
         const productData = {
             name: document.getElementById('prod-name').value,
             price: Number(document.getElementById('prod-price').value),
             stock: Number(document.getElementById('prod-stock').value),
+            category: selectedCategory,
+            available_variations: selectedVariations,
             description: document.getElementById('prod-desc').value,
             image_url: finalImageUrl, 
             shipping_dimensions: {
@@ -169,6 +231,7 @@ addProductForm.addEventListener('submit', async (e) => {
 
         addProductForm.reset();
         document.getElementById('prod-image').value = ""; 
+        renderAttributes('padrao');
         modal.style.display = 'none';
         loadProducts();
 
