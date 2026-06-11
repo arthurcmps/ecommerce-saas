@@ -1,0 +1,224 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #0f111a;
+    color: #fff;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Painel Esquerdo com Imagem */
+.visual-panel {
+    flex: 1;
+    display: none;
+    background: linear-gradient(135deg, rgba(15,17,26,0.9), rgba(26,32,44,0.8));
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .visual-panel {
+        display: flex; 
+    }
+}
+
+.visual-panel h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.visual-panel p {
+    color: #a0aec0;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+/* Painel Direito do Formulário */
+.form-panel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background-color: #1a202c;
+}
+
+form {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+form h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #a0aec0;
+    margin-bottom: 1.5rem;
+    display: block;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-group label {
+    color: #e2e8f0;
+    font-size: 0.9rem;
+}
+
+.input-group input, 
+.input-group textarea {
+    width: 100%; 
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #2d3748;
+    background-color: #2d3748;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    font-family: inherit; 
+    resize: vertical; 
+}
+
+.input-group input:focus, 
+.input-group textarea:focus {
+    border-color: #ed8936;
+}
+
+button {
+    padding: 1rem;
+    border-radius: 8px;
+    border: none;
+    background-color: #ed8936;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #dd6b20;
+}
+
+.error-message {
+    color: #e53e3e;
+    font-size: 0.875rem;
+    text-align: center;
+    display: none; 
+}
+
+.link-text {
+    color: #a0aec0;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.link-text a {
+    color: #ed8936;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.input-row {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
+
+.input-row .input-group {
+    flex: 1; 
+}
+
+.card-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1rem;
+}
+
+.btn-edit, .btn-delete {
+    flex: 1;
+    background-color: transparent;
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 0.9rem;
+}
+
+.btn-edit {
+    color: #ed8936;
+    border: 1px solid #ed8936;
+}
+
+.btn-edit:hover {
+    background-color: #ed8936;
+    color: #fff;
+}
+
+.btn-delete {
+    color: #e53e3e;
+    border: 1px solid #e53e3e;
+}
+
+.btn-delete:hover {
+    background-color: #e53e3e;
+    color: #fff;
+}
+
+/* --- REGRAS GLOBAIS DE AJUSTE DE ÍCONES E BOTÕES --- */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-nav a, 
+.cart-toggle-btn,
+.nav-link {
+    font-size: 0.95rem; 
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem; 
+    text-decoration: none;
+}
+
+/* Impede que imagens e SVGs dentro de navegação fiquem gigantes */
+.header-nav svg, 
+.header-nav img,
+.cart-toggle-btn svg, 
+.cart-toggle-btn img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.cart-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+}

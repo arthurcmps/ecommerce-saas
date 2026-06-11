@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Painel do Lojista</title>
+  <script type="module" crossorigin src="/assets/register-C_LC97lW.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/aws-config-E_cuEw3K.js">
+  <link rel="modulepreload" crossorigin href="/assets/masks-Br-vMdKB.js">
+  <link rel="stylesheet" crossorigin href="/assets/style-BtaBsTWo.css">
+</head>
+<body>
+
+    <div class="container">
+        <div class="visual-panel">
+            <h1>Crie sua Loja</h1>
+            <p>Inicie sua jornada no e-commerce. Cadastre-se para ter acesso a um painel de controle completo e personalizável.</p>
+        </div>
+
+        <div class="form-panel" style="overflow-y: auto;">
+            <form id="register-form">
+                <h2>Nova Conta</h2>
+                <span class="subtitle">Preencha os dados da sua nova loja.</span>
+
+                <p id="error-message" class="error-message"></p>
+
+                <div class="input-group">
+                    <label for="storeName">Nome da Loja</label>
+                    <input type="text" id="storeName" placeholder="Minha Loja" required>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="documentNumber">CPF ou CNPJ</label>
+                        <input type="text" id="documentNumber" placeholder="Apenas números" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="phone">Telefone / WhatsApp</label>
+                        <input type="text" id="phone" placeholder="(00) 00000-0000" required>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group" style="flex: 2;">
+                        <label for="cep">CEP de Origem</label>
+                        <input type="text" id="cep" placeholder="00000-000" required>
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label for="stateCode">Estado (UF)</label>
+                        <input type="text" id="stateCode" placeholder="Ex: RJ" maxlength="2" required>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group" style="flex: 2;">
+                        <label for="street">Rua/Avenida</label>
+                        <input type="text" id="street" placeholder="Nome da rua" required>
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label for="number">Número</label>
+                        <input type="text" id="number" placeholder="123" required>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="neighborhood">Bairro</label>
+                        <input type="text" id="neighborhood" placeholder="Seu bairro" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="city">Cidade</label>
+                        <input type="text" id="city" placeholder="Sua cidade" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="complement">Complemento</label>
+                    <input type="text" id="complement" placeholder="Apto, Sala, Bloco... (Opcional)">
+                </div>
+
+                <div class="input-group">
+                    <label for="email">E-mail de Acesso</label>
+                    <input type="email" id="email" placeholder="seu@email.com" required>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="password">Senha</label>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="confirmPassword">Confirmar</label>
+                        <input type="password" id="confirmPassword" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" id="register-button">Criar minha loja</button>
+
+                <p class="link-text">Já possui uma conta? <a href="index.html">Faça login</a></p>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
