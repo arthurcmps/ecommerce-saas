@@ -5,16 +5,16 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        dashboard: 'dashboard.html',
-        catalogo: 'catalogo.html',
-        design: 'design.html',
-        loja: 'loja.html',
-        loginCliente: 'login-cliente.html',
-        pedidos: 'pedidos.html',
-        produtos: 'produtos.html',
-        register: 'register.html',
-        registoCliente: 'registo-cliente.html',
-        relatorios: 'relatorios.html'
+        dashboard: 'public/dashboard.html',
+        catalogo: 'public/catalogo.html',
+        design: 'public/design.html',
+        loja: 'public/loja.html',
+        loginCliente: 'public/login-cliente.html',
+        pedidos: 'public/pedidos.html',
+        produtos: 'public/produtos.html',
+        register: 'public/register.html',
+        registoCliente: 'public/registo-cliente.html',
+        relatorios: 'public/relatorios.html'
       }
     }
   }
