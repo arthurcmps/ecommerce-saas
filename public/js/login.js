@@ -1,5 +1,6 @@
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { auth } from "./firebase-config.js";
+// js/login.js
+import './aws-config.js'; // Apenas importa para inicializar a AWS
+import { signIn } from 'aws-amplify/auth'; // Função de login da AWS
 
 const loginForm = document.getElementById('login-form');
 const emailInput = document.getElementById('email');
@@ -8,9 +9,8 @@ const errorMessage = document.getElementById('error-message');
 const loginButton = document.getElementById('login-button');
 
 loginForm.addEventListener('submit', async (event) => {
-    event.preventDefault(); // Impede a página de recarregar
+    event.preventDefault(); 
     
-    // Reseta mensagens
     errorMessage.style.display = 'none';
     errorMessage.innerText = '';
     loginButton.innerText = 'Autenticando...';
@@ -20,22 +20,26 @@ loginForm.addEventListener('submit', async (event) => {
     const password = passwordInput.value;
 
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        // Função signIn da AWS Amplify
+        const { isSignedIn, nextStep } = await signIn({
+            username: email,
+            password: password
+        });
         
-        console.log("Logado com sucesso! ID:", user.uid);
-        
-        // Redireciona para o painel (vamos criar depois)
-        window.location.href = "dashboard.html";
+        if (isSignedIn) {
+            console.log("Logado com sucesso!");
+            window.location.href = "dashboard.html";
+        }
         
     } catch (error) {
         console.error("Erro no login:", error);
         errorMessage.style.display = 'block';
         
-        if (error.code === 'auth/invalid-credential') {
+        // O Amplify retorna erros específicos que podemos tratar
+        if (error.name === 'NotAuthorizedException' || error.name === 'UserNotFoundException') {
             errorMessage.innerText = 'E-mail ou senha incorretos.';
         } else {
-            errorMessage.innerText = 'Erro ao tentar fazer login.';
+            errorMessage.innerText = 'Erro ao tentar fazer login. Tente novamente.';
         }
     } finally {
         loginButton.innerText = 'Entrar';
