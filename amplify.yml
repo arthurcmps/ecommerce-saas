@@ -3,7 +3,8 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm install
+        # Adicionamos a flag aqui para ignorar conflitos de bibliotecas internas
+        - npm install --legacy-peer-deps
     build:
       commands:
         - npm run build
