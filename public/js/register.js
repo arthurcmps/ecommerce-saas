@@ -1,7 +1,6 @@
 // js/register.js
-import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { auth, db } from "./aws-config.js";
+import './aws-config.js'; // Apenas importa para inicializar a AWS
+import { signUp } from 'aws-amplify/auth';
 import { maskDocument, maskCep, maskPhone } from "./masks.js";
 
 // Capturando os elementos da tela
@@ -37,7 +36,7 @@ cepInput.addEventListener('input', async (e) => {
                 document.getElementById('neighborhood').value = data.bairro;
                 document.getElementById('city').value = data.localidade;
                 document.getElementById('stateCode').value = data.uf;
-                document.getElementById('number').focus(); // Pula para o número
+                document.getElementById('number').focus(); 
                 errorMessage.style.display = 'none';
             } else {
                 errorMessage.innerText = 'CEP não encontrado.';
@@ -49,7 +48,7 @@ cepInput.addEventListener('input', async (e) => {
     }
 });
 
-// Lógica de Cadastro no Firebase
+// Lógica de Cadastro no AWS Cognito
 registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -75,41 +74,22 @@ registerForm.addEventListener('submit', async (e) => {
     const email = document.getElementById('email').value;
 
     try {
-        // 1. Cria o usuário no Authentication
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // 2. Salva os dados da loja no Firestore
-        await setDoc(doc(db, 'stores', user.uid), {
-            store_id: user.uid,
-            name: document.getElementById('storeName').value,
-            document: documentInput.value,
-            phone: phoneInput.value,
-            contact_email: email,
-            created_at: serverTimestamp(),
-            status: 'active',
-            address: {
-                cep: cepInput.value,
-                street: document.getElementById('street').value,
-                number: document.getElementById('number').value,
-                complement: document.getElementById('complement').value,
-                neighborhood: document.getElementById('neighborhood').value,
-                city: document.getElementById('city').value,
-                state: document.getElementById('stateCode').value
-            },
-            shipping_config: {
-                origin_zip_code: cepInput.value,
-                integrated_carriers: []
-            },
-            theme_config: {
-                primary_color: "#1A202C",
-                secondary_color: "#ED8936",
-                home_layout: { vitrine_style: "grid" }
+        // 1. Cria o usuário no AWS Cognito
+        const { isSignUpComplete, userId, nextStep } = await signUp({
+            username: email,
+            password: password,
+            options: {
+                userAttributes: {
+                    email: email
+                }
             }
         });
 
-        console.log("Loja provisionada com sucesso!");
+        console.log("Loja provisionada com sucesso no Cognito! ID:", userId);
         
+        /* O salvamento no Banco de Dados (DynamoDB) com CNPJ, endereço e cores
+           será ativado aqui na próxima etapa, assim que criarmos a tabela 'Store' */
+
         // Redireciona de volta para a tela de login
         window.location.href = "index.html";
 
@@ -117,8 +97,10 @@ registerForm.addEventListener('submit', async (e) => {
         console.error("Erro no cadastro:", error);
         errorMessage.style.display = 'block';
         
-        if (error.code === 'auth/email-already-in-use') {
+        if (error.name === 'UsernameExistsException') {
             errorMessage.innerText = 'Este e-mail já está em uso.';
+        } else if (error.name === 'InvalidPasswordException') {
+            errorMessage.innerText = 'A senha não atende aos requisitos mínimos.';
         } else {
             errorMessage.innerText = 'Erro ao provisionar a loja. Tente novamente.';
         }
