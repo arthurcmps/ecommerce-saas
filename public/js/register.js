@@ -1,5 +1,5 @@
 // js/register.js
-import './aws-config.js'; // Apenas importa para inicializar a AWS
+import './aws-config.js';
 import { signUp } from 'aws-amplify/auth';
 import { maskDocument, maskCep, maskPhone } from "./masks.js";
 
