@@ -3,11 +3,7 @@ backend:
   phases:
     build:
       commands:
-        - echo "Instalando dependências..."
-        - npm install --legacy-peer-deps
-        - echo "Verificando estrutura..."
-        - ls -la amplify/
-        - echo "Executando deploy do backend..."
+        - npm install
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
@@ -23,4 +19,4 @@ frontend:
       - '**/*'
   cache:
     paths:
-      - node_modules/**/*
+      - node_modules

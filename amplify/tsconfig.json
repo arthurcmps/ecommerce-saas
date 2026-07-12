@@ -6,13 +6,10 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "types": ["node"]
+    "isolatedModules": true
   },
-  "include": ["src/**/*.ts", "src/**/*.js"],
-  "exclude": ["node_modules", "dist", "amplify", "amplify-backup"]
+  "include": [
+    "**/*.ts"
+  ]
 }
