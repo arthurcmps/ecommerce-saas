@@ -12,11 +12,10 @@ body {
 
 .container {
     display: flex;
-    height: 100vh;
-    width: 100vw;
+    min-height: 100vh;
+    width: 100%;
 }
 
-/* Painel Esquerdo com Imagem */
 .visual-panel {
     flex: 1;
     display: none;
@@ -31,7 +30,7 @@ body {
 
 @media (min-width: 768px) {
     .visual-panel {
-        display: flex; 
+        display: flex;
     }
 }
 
@@ -46,7 +45,6 @@ body {
     line-height: 1.6;
 }
 
-/* Painel Direito do Formulário */
 .form-panel {
     flex: 1;
     display: flex;
@@ -54,11 +52,12 @@ body {
     align-items: center;
     padding: 2rem;
     background-color: #1a202c;
+    overflow-y: auto;
 }
 
 form {
     width: 100%;
-    max-width: 400px;
+    max-width: 520px;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -86,9 +85,10 @@ form h2 {
     font-size: 0.9rem;
 }
 
-.input-group input, 
-.input-group textarea {
-    width: 100%; 
+.input-group input,
+.input-group textarea,
+.input-group select {
+    width: 100%;
     padding: 1rem;
     border-radius: 8px;
     border: 1px solid #2d3748;
@@ -96,13 +96,15 @@ form h2 {
     color: #fff;
     font-size: 1rem;
     outline: none;
-    font-family: inherit; 
-    resize: vertical; 
+    font-family: inherit;
+    resize: vertical;
 }
 
-.input-group input:focus, 
-.input-group textarea:focus {
+.input-group input:focus,
+.input-group textarea:focus,
+.input-group select:focus {
     border-color: #ed8936;
+    box-shadow: 0 0 0 3px rgba(237, 137, 54, 0.12);
 }
 
 button {
@@ -115,18 +117,27 @@ button {
     font-weight: bold;
     cursor: pointer;
     margin-top: 1rem;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, opacity 0.3s, transform 0.2s;
 }
 
 button:hover {
     background-color: #dd6b20;
 }
 
+button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
 .error-message {
-    color: #e53e3e;
+    color: #fc8181;
+    background: rgba(229, 62, 62, 0.12);
+    border: 1px solid rgba(229, 62, 62, 0.25);
+    border-radius: 8px;
+    padding: 0.75rem;
     font-size: 0.875rem;
     text-align: center;
-    display: none; 
+    display: none;
 }
 
 .link-text {
@@ -148,7 +159,8 @@ button:hover {
 }
 
 .input-row .input-group {
-    flex: 1; 
+    flex: 1;
+    min-width: 0;
 }
 
 .card-actions {
@@ -190,27 +202,25 @@ button:hover {
     color: #fff;
 }
 
-/* --- REGRAS GLOBAIS DE AJUSTE DE ÍCONES E BOTÕES --- */
 .header-nav {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.header-nav a, 
+.header-nav a,
 .cart-toggle-btn,
 .nav-link {
-    font-size: 0.95rem; 
+    font-size: 0.95rem;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem; 
+    gap: 0.4rem;
     text-decoration: none;
 }
 
-/* Impede que imagens e SVGs dentro de navegação fiquem gigantes */
-.header-nav svg, 
+.header-nav svg,
 .header-nav img,
-.cart-toggle-btn svg, 
+.cart-toggle-btn svg,
 .cart-toggle-btn img {
     width: 20px;
     height: 20px;
@@ -221,4 +231,31 @@ button:hover {
     font-size: 0.75rem;
     padding: 0.2rem 0.5rem;
     border-radius: 12px;
+}
+
+@media (max-width: 767px) {
+    .container {
+        min-height: 100dvh;
+    }
+
+    .form-panel {
+        align-items: flex-start;
+        padding: 2rem 1.25rem;
+    }
+
+    form {
+        max-width: none;
+    }
+
+    form h2 {
+        font-size: 1.65rem;
+    }
+
+    .input-row {
+        flex-direction: column;
+    }
+
+    .header-nav {
+        flex-wrap: wrap;
+    }
 }
