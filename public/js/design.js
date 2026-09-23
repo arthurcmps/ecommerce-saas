@@ -1,7 +1,6 @@
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { auth, db } from "./firebase-config.js";
-import { renderSidebar, updateSidebarData } from "./sidebar.js";
+import { client, unwrapJson } from './aws-config.js';
+import { requireMerchant } from './session.js';
+import { renderSidebar, updateSidebarData } from './sidebar.js';
 
 const dashboardContent = document.getElementById('dashboard-content');
 const designForm = document.getElementById('design-form');
@@ -16,68 +15,63 @@ let currentUserId = null;
 
 renderSidebar('design');
 
-primaryColorInput.addEventListener('input', (e) => primaryHexDisplay.innerText = e.target.value);
-secondaryColorInput.addEventListener('input', (e) => secondaryHexDisplay.innerText = e.target.value);
-
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        currentUserId = user.uid;
-        dashboardContent.style.display = 'flex';
-
-        try {
-            const storeDocRef = doc(db, 'stores', currentUserId);
-            const storeDoc = await getDoc(storeDocRef);
-            
-            if (storeDoc.exists()) {
-                const storeData = storeDoc.data();
-                updateSidebarData(storeData.name, user.uid);
-
-                if (storeData.theme_config) {
-                    primaryColorInput.value = storeData.theme_config.primary_color || "#1A202C";
-                    primaryHexDisplay.innerText = primaryColorInput.value;
-                    
-                    secondaryColorInput.value = storeData.theme_config.secondary_color || "#ED8936";
-                    secondaryHexDisplay.innerText = secondaryColorInput.value;
-
-                    if (storeData.theme_config.home_layout) {
-                        vitrineStyleSelect.value = storeData.theme_config.home_layout.vitrine_style || "grid";
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Erro ao carregar as configurações de design:", error);
-        }
-    } else {
-        window.location.href = "index.html";
-    }
+primaryColorInput.addEventListener('input', (e) => {
+  primaryHexDisplay.innerText = e.target.value;
 });
+secondaryColorInput.addEventListener('input', (e) => {
+  secondaryHexDisplay.innerText = e.target.value;
+});
+
+async function init() {
+  try {
+    const { user, store } = await requireMerchant();
+    currentUserId = user.userId;
+    dashboardContent.style.display = 'flex';
+
+    if (store) {
+      updateSidebarData(store.name, user.userId);
+      const theme = unwrapJson(store.themeConfig, {});
+      primaryColorInput.value = theme.primary_color || '#1A202C';
+      secondaryColorInput.value = theme.secondary_color || '#ED8936';
+      primaryHexDisplay.innerText = primaryColorInput.value;
+      secondaryHexDisplay.innerText = secondaryColorInput.value;
+      vitrineStyleSelect.value = theme.home_layout?.vitrine_style || 'grid';
+    }
+  } catch (error) {
+    console.error('Erro ao carregar design:', error);
+  }
+}
 
 designForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const originalText = btnSaveDesign.innerText;
-    btnSaveDesign.innerText = "A guardar...";
-    btnSaveDesign.disabled = true;
+  e.preventDefault();
 
-    try {
-        const storeDocRef = doc(db, 'stores', currentUserId);
-        
-        await updateDoc(storeDocRef, {
-            theme_config: {
-                primary_color: primaryColorInput.value,
-                secondary_color: secondaryColorInput.value,
-                home_layout: {
-                    vitrine_style: vitrineStyleSelect.value
-                }
-            }
-        });
+  if (!currentUserId) return;
 
-        alert("Design atualizado com sucesso!");
-    } catch (error) {
-        console.error("Erro ao atualizar o design:", error);
-        alert("Ocorreu um erro ao guardar as alterações.");
-    } finally {
-        btnSaveDesign.innerText = originalText;
-        btnSaveDesign.disabled = false;
-    }
+  const originalText = btnSaveDesign.innerText;
+  btnSaveDesign.innerText = 'A guardar...';
+  btnSaveDesign.disabled = true;
+
+  try {
+    const { errors } = await client.models.Store.update({
+      storeId: currentUserId,
+      themeConfig: {
+        primary_color: primaryColorInput.value,
+        secondary_color: secondaryColorInput.value,
+        home_layout: {
+          vitrine_style: vitrineStyleSelect.value,
+        },
+      },
+    });
+
+    if (errors?.length) throw new Error(errors.map((item) => item.message).join('; '));
+    alert('Design atualizado com sucesso!');
+  } catch (error) {
+    console.error('Erro ao atualizar o design:', error);
+    alert('Ocorreu um erro ao guardar as alterações.');
+  } finally {
+    btnSaveDesign.innerText = originalText;
+    btnSaveDesign.disabled = false;
+  }
 });
+
+init();
