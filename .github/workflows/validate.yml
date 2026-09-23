@@ -1,0 +1,72 @@
+name: Validate portfolio project
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -e
+          while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            node --check "$file"
+          done < <(find public/js -type f -name '*.js' -print0)
+
+      - name: Check local HTML references
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          from urllib.parse import urlparse
+
+          root = Path('public')
+          missing = []
+
+          class RefParser(HTMLParser):
+              def __init__(self, page):
+                  super().__init__()
+                  self.page = page
+
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  for key in ('href', 'src'):
+                      value = attrs.get(key)
+                      if not value:
+                          continue
+                      if value.startswith(('#', 'http://', 'https://', 'mailto:', 'tel:', 'data:', 'javascript:')):
+                          continue
+                      path = urlparse(value).path
+                      if not path:
+                          continue
+                      target = (root / path.lstrip('/')) if path.startswith('/') else (self.page.parent / path)
+                      if not target.exists():
+                          missing.append((self.page.as_posix(), value))
+
+          for page in root.glob('*.html'):
+              parser = RefParser(page)
+              parser.feed(page.read_text(encoding='utf-8'))
+
+          if missing:
+              print('Missing local references:')
+              for page, ref in missing:
+                  print(f'- {page}: {ref}')
+              raise SystemExit(1)
+
+          print('All local HTML references exist.')
+          PY
