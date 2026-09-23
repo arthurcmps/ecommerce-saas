@@ -1,6 +1,6 @@
 // js/sidebar.js
-import { signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { auth } from "./firebase-config.js";
+import './aws-config.js';
+import { signOut } from 'aws-amplify/auth';
 
 export function renderSidebar(activePage) {
     const container = document.getElementById('sidebar-container');
@@ -17,7 +17,6 @@ export function renderSidebar(activePage) {
                 <a href="produtos.html" class="${activePage === 'produtos' ? 'active' : ''}">Gerir Produtos</a>
                 <a href="pedidos.html" class="${activePage === 'pedidos' ? 'active' : ''}">Pedidos</a>
                 <a href="design.html" class="${activePage === 'design' ? 'active' : ''}">Personalizar Design</a>
-                
                 <a href="#" id="link-my-store" target="_blank" style="margin-top: 2rem; color: #fff; background-color: rgba(255,255,255,0.1);">👁️ Ver Minha Loja</a>
             </nav>
             <div class="sidebar-footer">
@@ -28,9 +27,10 @@ export function renderSidebar(activePage) {
 
     document.getElementById('logout-button').addEventListener('click', async () => {
         try {
-            await signOut(auth);
+            await signOut();
+            window.location.href = 'index.html';
         } catch (error) {
-            console.error("Erro ao terminar sessão:", error);
+            console.error('Erro ao terminar sessão:', error);
         }
     });
 }
@@ -39,6 +39,6 @@ export function updateSidebarData(storeName, userId) {
     const storeNameDisplay = document.getElementById('store-name-display');
     const linkMyStore = document.getElementById('link-my-store');
 
-    if (storeNameDisplay) storeNameDisplay.innerText = storeName;
-    if (linkMyStore && userId) linkMyStore.href = `loja.html?id=${userId}`;
+    if (storeNameDisplay) storeNameDisplay.innerText = storeName || 'Minha Loja';
+    if (linkMyStore && userId) linkMyStore.href = `loja.html?id=${encodeURIComponent(userId)}`;
 }
