@@ -1,14 +1,12 @@
-import { doc, getDoc, collection, getDocs, addDoc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { db, auth } from "./firebase-config.js";
+import './aws-config.js';
+import { client, unwrapJson } from './aws-config.js';
+import { getUrl } from 'aws-amplify/storage';
 
-const urlParams = new URLSearchParams(window.location.search);
-const storeId = urlParams.get('id');
-
+const params = new URLSearchParams(window.location.search);
+const storeId = params.get('id');
 const storeNameElement = document.getElementById('public-store-name');
 const productsList = document.getElementById('public-products-list');
 const navLogin = document.getElementById('nav-login');
-
-// Elementos do Carrinho
 const btnOpenCart = document.getElementById('btn-open-cart');
 const btnCloseCart = document.getElementById('btn-close-cart');
 const cartSidebar = document.getElementById('cart-sidebar');
@@ -17,68 +15,26 @@ const cartBadge = document.getElementById('cart-badge');
 const cartItemsContainer = document.getElementById('cart-items');
 const cartTotalPrice = document.getElementById('cart-total-price');
 const btnCheckout = document.getElementById('btn-checkout');
-
-// Elementos do Modal de Checkout
 const checkoutModal = document.getElementById('checkout-modal');
 const checkoutForm = document.getElementById('checkout-form');
 const btnCancelCheckout = document.getElementById('btn-cancel-checkout');
 
-let publicProductsData = {}; 
-let cart = JSON.parse(localStorage.getItem(`cart_${storeId}`)) || [];
-let storePhoneNumber = "";
+let products = {};
+let cart = JSON.parse(localStorage.getItem(`cart_${storeId}`) || '[]');
+let storeData = null;
+let freightValue = 0;
+let freightMethod = '';
 
-let currentCustomerId = null;
-let currentCustomerData = null;
-
-// Ouve se o cliente está logado e vai buscar os dados de forma blindada
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        currentCustomerId = user.uid;
-        
-        if(navLogin) {
-            navLogin.innerText = "Sair da Conta";
-            navLogin.href = "#";
-            navLogin.addEventListener('click', (e) => {
-                e.preventDefault();
-                signOut(auth).then(() => window.location.reload());
-            });
-        }
-
-        try {
-            // Tenta buscar na coleção de clientes
-            let userDoc = await getDoc(doc(db, 'customers', user.uid));
-            
-            if (userDoc.exists()) {
-                currentCustomerData = userDoc.data();
-            } else {
-                // FALLBACK: Se você estiver a testar logado com a conta do Lojista
-                userDoc = await getDoc(doc(db, 'stores', user.uid));
-                if (userDoc.exists()) {
-                    currentCustomerData = userDoc.data();
-                }
-            }
-        } catch (error) {
-            console.error("Erro ao buscar perfil:", error);
-        }
-    } else {
-        currentCustomerId = null;
-        currentCustomerData = null;
-        if(navLogin) {
-            navLogin.innerText = "Entrar";
-            navLogin.href = `login-cliente.html?id=${storeId || ''}`;
-        }
-    }
-});
+if (navLogin) navLogin.href = `login-cliente.html?id=${encodeURIComponent(storeId || '')}`;
 
 function openCart() {
-    cartSidebar.classList.add('open');
-    cartOverlay.classList.add('active');
-    renderCart(); 
+  cartSidebar.classList.add('open');
+  cartOverlay.classList.add('active');
+  renderCart();
 }
-
 function closeCart() {
-    cartSidebar.classList.remove('open');
-    cartOverlay.classList.remove('active');
+  cartSidebar.classList.remove('open');
+  cartOverlay.classList.remove('active');
 }
 
 btnOpenCart.addEventListener('click', openCart);
@@ -86,399 +42,258 @@ btnCloseCart.addEventListener('click', closeCart);
 cartOverlay.addEventListener('click', closeCart);
 
 async function initStore() {
-    if (!storeId) {
-        document.body.innerHTML = '<h1 style="text-align:center; margin-top:100px; color:#2d3748;">Erro: ID da loja não especificado na hiperligação.</h1>';
-        return;
-    }
+  if (!storeId) {
+    document.body.innerHTML = '<h1 style="text-align:center;margin-top:100px;">Loja não especificada.</h1>';
+    return;
+  }
 
-    try {
-        const storeDoc = await getDoc(doc(db, 'stores', storeId));
-        if (!storeDoc.exists()) {
-            document.body.innerHTML = '<h1 style="text-align:center; margin-top:100px; color:#2d3748;">Loja não encontrada.</h1>';
-            return;
-        }
+  try {
+    const { data: store, errors } = await client.models.Store.get({ storeId }, { authMode: 'apiKey' });
+    if (errors?.length || !store) throw new Error('Loja não encontrada.');
+    storeData = store;
+    storeNameElement.innerText = store.name;
+    document.title = `${store.name} - Loja Oficial`;
 
-        const storeData = storeDoc.data();
-        storeNameElement.innerText = storeData.name;
-        document.title = `${storeData.name} - Loja Oficial`;
-        storePhoneNumber = storeData.phone || ""; 
+    const theme = unwrapJson(store.themeConfig, {});
+    const root = document.documentElement;
+    if (theme.primary_color) root.style.setProperty('--primary-color', theme.primary_color);
+    if (theme.secondary_color) root.style.setProperty('--secondary-color', theme.secondary_color);
+    productsList.className = theme.home_layout?.vitrine_style === 'carousel' ? 'vitrine-carousel' : 'vitrine-grid';
 
-        if (storeData.theme_config) {
-            const root = document.documentElement;
-            if(storeData.theme_config.primary_color) root.style.setProperty('--primary-color', storeData.theme_config.primary_color);
-            if(storeData.theme_config.secondary_color) root.style.setProperty('--secondary-color', storeData.theme_config.secondary_color);
+    await loadPublicProducts();
+    updateCartBadge();
+  } catch (error) {
+    console.error(error);
+    document.body.innerHTML = '<h1 style="text-align:center;margin-top:100px;">Loja não encontrada.</h1>';
+  }
+}
 
-            if (storeData.theme_config.home_layout && storeData.theme_config.home_layout.vitrine_style === 'carousel') {
-                productsList.className = 'vitrine-carousel';
-            } else {
-                productsList.className = 'vitrine-grid';
-            }
-        }
-
-        await loadPublicProducts();
-        updateCartBadge(); 
-
-    } catch (error) {
-        console.error("Erro ao carregar a loja:", error);
-    }
+async function resolveImage(path) {
+  if (!path) return null;
+  try {
+    const { url } = await getUrl({ path });
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
 
 async function loadPublicProducts() {
-    try {
-        const productsRef = collection(db, 'stores', storeId, 'products');
-        const snapshot = await getDocs(productsRef);
+  const { data, errors } = await client.models.Product.list({
+    authMode: 'apiKey',
+    filter: { storeId: { eq: storeId } },
+  });
+  if (errors?.length) throw new Error(errors.map((item) => item.message).join('; '));
 
-        productsList.innerHTML = '';
-        publicProductsData = {}; 
+  productsList.innerHTML = '';
+  products = {};
+  const active = (data || []).filter((product) => product.isActive !== false && Number(product.stock || 0) > 0);
 
-        if (snapshot.empty) {
-            productsList.innerHTML = '<p style="text-align:center; width: 100%; color:#718096;">Esta loja ainda não tem produtos disponíveis.</p>';
-            return;
-        }
+  if (!active.length) {
+    productsList.innerHTML = '<p style="text-align:center;width:100%;color:#718096;">Esta loja ainda não tem produtos disponíveis.</p>';
+    return;
+  }
 
-        snapshot.forEach((docSnap) => {
-            const prod = docSnap.data();
-            const prodId = docSnap.id;
-            
-            publicProductsData[prodId] = prod; 
-
-            if (prod.is_active !== false) {
-                const imgHtml = prod.image_url 
-                    ? `<img src="${prod.image_url}" alt="${prod.name}" style="width: 100%; height: 250px; object-fit: cover; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: -1.5rem -1.5rem 1rem -1.5rem;">`
-                    : `<div style="width: calc(100% + 3rem); height: 250px; background-color: #e2e8f0; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: -1.5rem -1.5rem 1rem -1.5rem; display: flex; align-items: center; justify-content: center; color: #a0aec0;">Sem foto</div>`;
-
-                const card = document.createElement('div');
-                card.className = 'public-product-card';
-                card.innerHTML = `
-                    ${imgHtml}
-                    <h4>${prod.name}</h4>
-                    <span class="price">${parseFloat(prod.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-                    <p class="desc">${prod.description}</p>
-                    <button class="btn-buy" onclick="addToCart('${prodId}')">Adicionar ao Carrinho</button>
-                `;
-                productsList.appendChild(card);
-            }
-        });
-    } catch (error) {
-        console.error("Erro ao carregar os produtos:", error);
-    }
+  for (const product of active) {
+    products[product.id] = product;
+    const url = await resolveImage(product.imagePath);
+    const card = document.createElement('div');
+    card.className = 'public-product-card';
+    card.innerHTML = `
+      ${url ? `<img src="${url}" alt="${escapeHtml(product.name)}" style="width:100%;height:250px;object-fit:cover;border-radius:8px 8px 0 0;margin:-1.5rem -1.5rem 1rem -1.5rem;">` : '<div style="width:calc(100% + 3rem);height:250px;background:#e2e8f0;margin:-1.5rem -1.5rem 1rem -1.5rem;display:flex;align-items:center;justify-content:center;color:#718096;">Sem foto</div>'}
+      <h4>${escapeHtml(product.name)}</h4>
+      <span class="price">${money(product.price)}</span>
+      <p class="desc">${escapeHtml(product.description || '')}</p>
+      <button class="btn-buy" onclick="addToCart('${product.id}')">Adicionar ao Carrinho</button>`;
+    productsList.appendChild(card);
+  }
 }
 
 window.addToCart = (productId) => {
-    const product = publicProductsData[productId];
-    if (!product) return;
+  const product = products[productId];
+  if (!product) return;
+  const existing = cart.find((item) => item.id === productId);
+  const maxStock = Number(product.stock || 0);
 
-    const existingItem = cart.find(item => item.id === productId);
-
-    if (existingItem) {
-        if (existingItem.quantity < product.stock) {
-            existingItem.quantity += 1;
-        } else {
-            alert("Quantidade máxima em estoque atingida para este produto.");
-            return;
-        }
-    } else {
-        cart.push({
-            id: productId,
-            name: product.name,
-            price: product.price,
-            image_url: product.image_url,
-            quantity: 1,
-            max_stock: product.stock
-        });
-    }
-
-    saveCart();
-    openCart(); 
+  if (existing) {
+    if (existing.quantity >= maxStock) return alert('Quantidade máxima em estoque atingida.');
+    existing.quantity += 1;
+  } else {
+    cart.push({ id: product.id, name: product.name, price: Number(product.price || 0), imagePath: product.imagePath || null, quantity: 1, maxStock });
+  }
+  saveCart();
+  openCart();
 };
 
 window.changeQuantity = (productId, delta) => {
-    const item = cart.find(i => i.id === productId);
-    if (!item) return;
-
-    item.quantity += delta;
-
-    if (item.quantity <= 0) {
-        removeFromCart(productId);
-    } else if (item.quantity > item.max_stock) {
-        item.quantity = item.max_stock;
-        alert("Estoque máximo atingido.");
-    } else {
-        saveCart();
-        renderCart();
-    }
+  const item = cart.find((entry) => entry.id === productId);
+  if (!item) return;
+  item.quantity += delta;
+  if (item.quantity <= 0) cart = cart.filter((entry) => entry.id !== productId);
+  if (item.quantity > item.maxStock) item.quantity = item.maxStock;
+  saveCart();
+  renderCart();
 };
 
 window.removeFromCart = (productId) => {
-    cart = cart.filter(item => item.id !== productId);
-    saveCart();
-    renderCart();
+  cart = cart.filter((item) => item.id !== productId);
+  saveCart();
+  renderCart();
 };
 
 function saveCart() {
-    localStorage.setItem(`cart_${storeId}`, JSON.stringify(cart));
-    updateCartBadge();
+  localStorage.setItem(`cart_${storeId}`, JSON.stringify(cart));
+  updateCartBadge();
 }
 
 function updateCartBadge() {
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartBadge.innerText = totalItems;
+  cartBadge.innerText = cart.reduce((total, item) => total + item.quantity, 0);
 }
 
-function renderCart() {
-    cartItemsContainer.innerHTML = '';
+async function renderCart() {
+  cartItemsContainer.innerHTML = '';
+  if (!cart.length) {
+    cartItemsContainer.innerHTML = '<p class="empty-cart-msg">O seu carrinho está vazio.</p>';
+    cartTotalPrice.innerText = money(0);
+    return;
+  }
 
-    if (cart.length === 0) {
-        cartItemsContainer.innerHTML = '<p class="empty-cart-msg">O seu carrinho está vazio.</p>';
-        cartTotalPrice.innerText = 'R$ 0,00';
-        return;
-    }
-
-    let total = 0;
-
-    cart.forEach(item => {
-        total += item.price * item.quantity;
-
-        const imgHtml = item.image_url 
-            ? `<img src="${item.image_url}" class="cart-item-img">` 
-            : `<div class="cart-item-img" style="background-color:#e2e8f0;"></div>`;
-
-        const itemEl = document.createElement('div');
-        itemEl.className = 'cart-item';
-        itemEl.innerHTML = `
-            ${imgHtml}
-            <div class="cart-item-info">
-                <div class="cart-item-title">${item.name}</div>
-                <div class="cart-item-price">${parseFloat(item.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-                <div class="cart-controls">
-                    <button class="btn-qtd" onclick="changeQuantity('${item.id}', -1)">-</button>
-                    <span>${item.quantity}</span>
-                    <button class="btn-qtd" onclick="changeQuantity('${item.id}', 1)">+</button>
-                    <button class="btn-remove" onclick="removeFromCart('${item.id}')">Remover</button>
-                </div>
-            </div>
-        `;
-        cartItemsContainer.appendChild(itemEl);
-    });
-
-    cartTotalPrice.innerText = parseFloat(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  for (const item of cart) {
+    const url = await resolveImage(item.imagePath);
+    const itemEl = document.createElement('div');
+    itemEl.className = 'cart-item';
+    itemEl.innerHTML = `
+      ${url ? `<img src="${url}" class="cart-item-img" alt="">` : '<div class="cart-item-img" style="background:#e2e8f0;"></div>'}
+      <div class="cart-item-info">
+        <div class="cart-item-title">${escapeHtml(item.name)}</div>
+        <div class="cart-item-price">${money(item.price)}</div>
+        <div class="cart-controls">
+          <button class="btn-qtd" onclick="changeQuantity('${item.id}',-1)">-</button>
+          <span>${item.quantity}</span>
+          <button class="btn-qtd" onclick="changeQuantity('${item.id}',1)">+</button>
+          <button class="btn-remove" onclick="removeFromCart('${item.id}')">Remover</button>
+        </div>
+      </div>`;
+    cartItemsContainer.appendChild(itemEl);
+  }
+  cartTotalPrice.innerText = money(cart.reduce((sum, item) => sum + item.price * item.quantity, 0));
 }
 
-// LÓGICA DE AUTO-PREENCHIMENTO E GRAVAÇÃO BLINDADA
-// --- VARIÁVEIS DE FRETE ---
-let freteValor = 0;
-let freteMetodo = "";
-
-// Função para simular o cálculo (MVP)
-function calcularFrete(cep) {
-    // Aqui no futuro entrará a integração com Melhor Envio ou Correios
-    const basePac = 15.90;
-    const baseSedex = 35.50;
-
-    const optionsHtml = `
-        <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0; background-color: #fff;">
-            <div style="display: flex; gap: 0.8rem; align-items: center;">
-                <input type="radio" name="frete-radio" value="${basePac}" data-name="PAC (Padrão)" onchange="selecionarFrete(this)" required style="width: 18px; height: 18px;">
-                <span style="font-size: 0.95rem; font-weight: bold; color: var(--text-color);">PAC (Padrão)</span>
-            </div>
-            <span style="font-size: 0.95rem; color: var(--text-color);">R$ ${basePac.toFixed(2).replace('.', ',')}</span>
-        </label>
-        
-        <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0; background-color: #fff;">
-            <div style="display: flex; gap: 0.8rem; align-items: center;">
-                <input type="radio" name="frete-radio" value="${baseSedex}" data-name="SEDEX (Expresso)" onchange="selecionarFrete(this)">
-                <span style="font-size: 0.95rem; font-weight: bold; color: var(--text-color);">SEDEX (Expresso)</span>
-            </div>
-            <span style="font-size: 0.95rem; color: var(--text-color);">R$ ${baseSedex.toFixed(2).replace('.', ',')}</span>
-        </label>
-    `;
-    
-    document.getElementById('shipping-options').innerHTML = optionsHtml;
+function calculateShipping() {
+  const options = [
+    { name: 'PAC (Padrão)', value: 15.9 },
+    { name: 'SEDEX (Expresso)', value: 35.5 },
+  ];
+  document.getElementById('shipping-options').innerHTML = options.map((option) => `
+    <label style="display:flex;justify-content:space-between;padding:.5rem;border:1px solid #e2e8f0;border-radius:6px;background:#fff;">
+      <span><input type="radio" name="frete-radio" value="${option.value}" data-name="${option.name}" onchange="selecionarFrete(this)"> ${option.name}</span>
+      <span>${money(option.value)}</span>
+    </label>`).join('');
 }
 
-// Atualiza o valor quando o cliente clica numa opção
 window.selecionarFrete = (radio) => {
-    freteValor = parseFloat(radio.value);
-    freteMetodo = radio.getAttribute('data-name');
-    atualizarBotaoPagamento();
+  freightValue = Number(radio.value);
+  freightMethod = radio.dataset.name;
+  updateCheckoutButton();
+};
+
+function updateCheckoutButton() {
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  checkoutForm.querySelector('button[type="submit"]').innerText = `Finalizar ${money(subtotal + freightValue)}`;
 }
 
-// Calcula o total final e escreve no botão
-function atualizarBotaoPagamento() {
-    let cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    let finalTotal = cartTotal + freteValor;
-    const btnSubmit = checkoutForm.querySelector('button[type="submit"]');
-    btnSubmit.innerText = `Pagar R$ ${finalTotal.toFixed(2).replace('.', ',')} Agora`;
-}
+const cepInput = document.getElementById('buyer-cep');
+cepInput?.addEventListener('input', async (event) => {
+  const value = event.target.value.replace(/\D/g, '');
+  if (value.length !== 8) return;
+  calculateShipping();
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${value}/json/`);
+    const address = await response.json();
+    if (!address.erro) {
+      document.getElementById('buyer-address').value = address.logradouro || '';
+      document.getElementById('buyer-neighborhood').value = address.bairro || '';
+      document.getElementById('buyer-city').value = address.localidade || '';
+      document.getElementById('buyer-state').value = address.uf || '';
+      document.getElementById('buyer-number').focus();
+    }
+  } catch (error) {
+    console.warn('ViaCEP indisponível:', error);
+  }
+});
 
-// Ouve as mudanças no campo do CEP para recálculo de Frete e Morada Automática
-const cepInputCheckout = document.getElementById('buyer-cep');
-if (cepInputCheckout) {
-    cepInputCheckout.addEventListener('input', async (e) => {
-        const val = e.target.value.replace(/\D/g, ''); // Fica apenas com os números
-        
-        // Se o CEP for alterado/apagado e ficar incompleto, resetamos o frete
-        if (val.length < 8) {
-            freteValor = 0;
-            freteMetodo = "";
-            document.getElementById('shipping-options').innerHTML = '<p style="font-size: 0.9rem; color: #718096; margin: 0; text-align: center;">Digite um CEP válido para calcular o frete.</p>';
-            atualizarBotaoPagamento(); // Tira o valor do frete do botão
-            return;
-        }
-
-        // Quando o cliente digita os 8 números do CEP novo
-        if (val.length === 8) {
-            // 1. Obriga o cliente a escolher o frete de novo
-            freteValor = 0;
-            freteMetodo = "";
-            atualizarBotaoPagamento();
-            
-            // 2. Calcula as novas opções
-            calcularFrete(val);
-            
-            // 3. Magia UX: Puxa a nova rua, bairro e cidade do ViaCEP automaticamente!
-            try {
-                document.getElementById('buyer-address').value = "A procurar morada...";
-                const response = await fetch(`https://viacep.com.br/ws/${val}/json/`);
-                const data = await response.json();
-                
-                if (!data.erro) {
-                    document.getElementById('buyer-address').value = data.logradouro || '';
-                    document.getElementById('buyer-neighborhood').value = data.bairro || '';
-                    document.getElementById('buyer-city').value = data.localidade || '';
-                    document.getElementById('buyer-state').value = data.uf || '';
-                    document.getElementById('buyer-number').focus(); // Move o cursor para o número
-                } else {
-                    document.getElementById('buyer-address').value = "";
-                }
-            } catch (error) {
-                console.error("Erro ao buscar novo CEP:", error);
-                document.getElementById('buyer-address').value = "";
-            }
-        }
-    });
-}
-
-// --- CHECKOUT ATUALIZADO ---
 btnCheckout.addEventListener('click', () => {
-    if (cart.length === 0) {
-        alert("O seu carrinho está vazio!");
-        return;
-    }
-
-    freteValor = 0; // Reinicia o frete ao abrir
-
-    if (currentCustomerData) {
-        if(document.getElementById('buyer-name')) document.getElementById('buyer-name').value = currentCustomerData.name || '';
-        if(document.getElementById('buyer-phone')) document.getElementById('buyer-phone').value = currentCustomerData.phone || '';
-        
-        if (currentCustomerData.address && typeof currentCustomerData.address === 'object') {
-            const addr = currentCustomerData.address;
-            if(document.getElementById('buyer-cep')) document.getElementById('buyer-cep').value = addr.cep || '';
-            if(document.getElementById('buyer-address')) document.getElementById('buyer-address').value = addr.street || '';
-            if(document.getElementById('buyer-number')) document.getElementById('buyer-number').value = addr.number || '';
-            if(document.getElementById('buyer-complement')) document.getElementById('buyer-complement').value = addr.complement || '';
-            if(document.getElementById('buyer-neighborhood')) document.getElementById('buyer-neighborhood').value = addr.neighborhood || '';
-            if(document.getElementById('buyer-city')) document.getElementById('buyer-city').value = addr.city || '';
-            if(document.getElementById('buyer-state')) document.getElementById('buyer-state').value = addr.state || '';
-            
-            // Dispara o frete automaticamente usando o CEP que veio do banco!
-            if (addr.cep) {
-                const cleanCep = addr.cep.replace(/\D/g, '');
-                if (cleanCep.length >= 8) calcularFrete(cleanCep);
-            }
-        }
-    }
-
-    atualizarBotaoPagamento();
-    closeCart(); 
-    checkoutModal.style.display = 'flex'; 
+  if (!cart.length) return alert('O seu carrinho está vazio!');
+  freightValue = 0;
+  freightMethod = '';
+  calculateShipping();
+  updateCheckoutButton();
+  closeCart();
+  checkoutModal.style.display = 'flex';
 });
 
 btnCancelCheckout.addEventListener('click', () => {
-    checkoutModal.style.display = 'none';
-    openCart(); 
+  checkoutModal.style.display = 'none';
+  openCart();
 });
 
-checkoutForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Proteção: Ocultar o erro clássico de finalizar sem selecionar frete
-    if (freteValor === 0) {
-        alert("Por favor, selecione uma opção de entrega.");
-        return;
-    }
-    
-    const btnSubmit = checkoutForm.querySelector('button[type="submit"]');
-    const originalText = btnSubmit.innerText;
-    btnSubmit.innerText = "A gerar pagamento...";
-    btnSubmit.disabled = true;
+checkoutForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!freightValue) return alert('Selecione uma opção de entrega.');
 
-    const buyerName = document.getElementById('buyer-name').value;
-    const buyerPhone = document.getElementById('buyer-phone').value;
-    const paymentMethod = document.getElementById('payment-method').value;
+  const button = checkoutForm.querySelector('button[type="submit"]');
+  const originalText = button.innerText;
+  button.disabled = true;
+  button.innerText = 'Registrando pedido...';
 
-    const structuredAddress = {
+  try {
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const payload = {
+      sellerId: storeId,
+      storeId,
+      buyerName: document.getElementById('buyer-name').value.trim(),
+      buyerPhone: document.getElementById('buyer-phone').value.trim(),
+      buyerAddress: {
         cep: document.getElementById('buyer-cep').value,
         street: document.getElementById('buyer-address').value,
         number: document.getElementById('buyer-number').value,
         complement: document.getElementById('buyer-complement').value,
         neighborhood: document.getElementById('buyer-neighborhood').value,
         city: document.getElementById('buyer-city').value,
-        state: document.getElementById('buyer-state').value
+        state: document.getElementById('buyer-state').value,
+      },
+      paymentMethod: document.getElementById('payment-method').value,
+      paymentStatus: 'pendente',
+      freightMethod,
+      freightCost: freightValue,
+      items: cart.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
+      totalAmount: subtotal + freightValue,
+      status: 'novo',
     };
 
-    let cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    let totalComFrete = cartTotal + freteValor;
+    const { data: order, errors } = await client.models.Order.create(payload, { authMode: 'apiKey' });
+    if (errors?.length) throw new Error(errors.map((item) => item.message).join('; '));
 
-    const orderData = {
-        customer_id: currentCustomerId || null,
-        buyer_name: buyerName,
-        buyer_phone: buyerPhone,
-        buyer_address: structuredAddress,
-        payment_method: paymentMethod,
-        payment_status: 'pendente',
-        freight_method: freteMetodo, // Regista o nome do frete
-        freight_cost: freteValor,    // Regista o valor do frete
-        items: cart, 
-        total_amount: totalComFrete, // Salva o total já somado com o frete
-        status: 'novo', 
-        created_at: serverTimestamp()
-    };
-
-    try {
-        // 1. Grava o pedido na coleção 'orders'
-        const docRef = await addDoc(collection(db, 'stores', storeId, 'orders'), orderData);
-        const newOrderId = docRef.id;
-        
-        // 2. BAIXA AUTOMÁTICA DE ESTOQUE (A Mágica)
-        for (const item of cart) {
-            const productRef = doc(db, 'stores', storeId, 'products', item.id);
-            await updateDoc(productRef, {
-                // Passamos o valor negativo da quantidade para deduzir do estoque atual
-                stock: increment(-item.quantity)
-            });
-        }
-        
-        // 3. Limpa o carrinho e a interface
-        cart = [];
-        saveCart();
-        renderCart();
-        checkoutForm.reset();
-        checkoutModal.style.display = 'none';
-
-        alert(`Pedido #${newOrderId.substring(0,6)} registado com sucesso!\nForma de Envio: ${freteMetodo}\nMétodo de Pagamento: ${paymentMethod.toUpperCase()}\nTotal: R$ ${totalComFrete.toFixed(2).replace('.', ',')}\n\nA aguardar integração do Gateway de Pagamento.`);
-        
-        // Recarrega os produtos na vitrine para atualizar os stocks visuais imediatamente
-        loadPublicProducts();
-
-    } catch (error) {
-        console.error("Erro ao gravar o pedido e baixar estoque:", error);
-        alert("Ocorreu um erro. Verifique a sua ligação.");
-    } finally {
-        btnSubmit.innerText = originalText;
-        btnSubmit.disabled = false;
-    }
+    cart = [];
+    saveCart();
+    await renderCart();
+    checkoutForm.reset();
+    checkoutModal.style.display = 'none';
+    alert(`Pedido ${order?.id ? '#' + order.id.slice(0, 6) : ''} registrado com sucesso. O pagamento online ainda não está integrado.`);
+  } catch (error) {
+    console.error('Erro ao registrar pedido:', error);
+    alert('Não foi possível registrar o pedido.');
+  } finally {
+    button.disabled = false;
+    button.innerText = originalText;
+  }
 });
+
+function money(value) {
+  return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function escapeHtml(value) {
+  return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+}
 
 initStore();

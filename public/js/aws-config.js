@@ -1,10 +1,19 @@
 import { Amplify } from 'aws-amplify';
-import outputs from '../../amplify_outputs.json'; 
+import { generateClient } from 'aws-amplify/data';
+import outputs from '../../amplify_outputs.json';
 
-// Inicializa a AWS
 Amplify.configure(outputs);
 
-// Dublês temporários para o Vite compilar as telas que ainda não foram migradas
-export const auth = {};
-export const db = {};
-export const storage = {};
+export const client = generateClient();
+
+export function unwrapJson(value, fallback = {}) {
+  if (value == null) return fallback;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return fallback;
+    }
+  }
+  return value;
+}
