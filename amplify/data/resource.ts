@@ -29,7 +29,7 @@ const schema = a.schema({
     shippingDimensions: a.json(),
     isActive: a.boolean().default(true),
   }).authorization((allow) => [
-    allow.ownerDefinedIn('sellerId'),
+    allow.owner(),
     allow.publicApiKey().to(['read']),
   ]),
 
