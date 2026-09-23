@@ -230,3 +230,16 @@ Cloud Function / API
 ```
 
 Depois disso, a integração de pagamento pode ser adicionada sem confiar em valores enviados pelo navegador.
+
+## Evidências visuais no portfólio
+
+O estudo de caso fica no [repositório do portfólio](https://github.com/arthurcmps/portfolio), em `projetos/ecommerce.html`. A seção **Explore o projeto** possui um carrossel com quatro espaços para capturas reais:
+
+1. Vitrine da loja (`loja.html?id=ID_DA_LOJA`).
+2. Carrinho de compras, com produtos de demonstração.
+3. Gestão de pedidos (`pedidos.html`).
+4. Relatórios e indicadores (`relatorios.html`).
+
+Execute o projeto seguindo **Como executar localmente** e use o roteiro **Como testar o fluxo principal** acima para preparar essas telas. Use dados fictícios nas capturas, sem informações de clientes reais.
+
+Salve as imagens no repositório **portfolio**, na pasta `assets/images/projects/ecommerce/`, como `01.webp` a `04.webp`. Ative os blocos de imagem e ajuste os textos alternativos e as legendas conforme o [GUIA_MIDIAS.md](https://github.com/arthurcmps/portfolio/blob/master/GUIA_MIDIAS.md). As capturas são publicadas pelo portfólio; não é necessário duplicá-las nos arquivos da loja.
