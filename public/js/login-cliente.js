@@ -1,39 +1,45 @@
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { auth } from "./firebase-config.js";
 
-// Captura o ID da loja na hiperligação (URL)
 const urlParams = new URLSearchParams(window.location.search);
 const storeId = urlParams.get('id');
 
 const linkRegister = document.getElementById('link-register');
 const linkBackStore = document.getElementById('link-back-store');
+const form = document.getElementById('login-client-form');
+const btn = document.getElementById('login-button');
+const errorMsg = document.getElementById('error-message');
 
-// Repassa o ID da loja para as hiperligações não se perderem
-if (storeId) {
-    linkRegister.href = `registo-cliente.html?id=${storeId}`;
-    linkBackStore.href = `loja.html?id=${storeId}`;
+function getReturnUrl() {
+    return storeId ? `loja.html?id=${encodeURIComponent(storeId)}` : 'catalogo.html';
 }
 
-document.getElementById('login-client-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const btn = document.getElementById('login-button');
-    const errorMsg = document.getElementById('error-message');
+if (storeId) {
+    linkRegister.href = `registo-cliente.html?id=${encodeURIComponent(storeId)}`;
+    linkBackStore.href = getReturnUrl();
+}
 
-    btn.innerText = "A entrar...";
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    btn.innerText = "Entrando...";
     btn.disabled = true;
     errorMsg.style.display = 'none';
+    errorMsg.innerText = '';
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
-        // Se o login for bem-sucedido, redireciona de volta para a loja correta
-        window.location.href = 'catalogo.html';
+        window.location.href = getReturnUrl();
     } catch (error) {
-        console.error("Erro no login:", error);
-        errorMsg.innerText = "E-mail ou senha incorretos.";
+        console.error("Erro no login do cliente:", error);
+        errorMsg.innerText = error.code === 'auth/invalid-credential'
+            ? "E-mail ou senha incorretos."
+            : "Não foi possível entrar agora. Tente novamente.";
         errorMsg.style.display = 'block';
+    } finally {
         btn.innerText = "Entrar na minha conta";
         btn.disabled = false;
     }
