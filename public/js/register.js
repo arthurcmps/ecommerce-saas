@@ -4,7 +4,6 @@ import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs
 import { auth, db } from "./firebase-config.js";
 import { maskDocument, maskCep, maskPhone } from "./masks.js";
 
-// Capturando os elementos da tela
 const registerForm = document.getElementById('register-form');
 const documentInput = document.getElementById('documentNumber');
 const phoneInput = document.getElementById('phone');
@@ -12,7 +11,6 @@ const cepInput = document.getElementById('cep');
 const errorMessage = document.getElementById('error-message');
 const registerButton = document.getElementById('register-button');
 
-// Aplicando as máscaras em tempo real enquanto o usuário digita
 documentInput.addEventListener('input', (e) => {
     e.target.value = maskDocument(e.target.value);
 });
@@ -21,7 +19,6 @@ phoneInput.addEventListener('input', (e) => {
     e.target.value = maskPhone(e.target.value);
 });
 
-// Lógica do ViaCEP
 cepInput.addEventListener('input', async (e) => {
     const maskedCep = maskCep(e.target.value);
     e.target.value = maskedCep;
@@ -30,14 +27,16 @@ cepInput.addEventListener('input', async (e) => {
         const cleanCep = maskedCep.replace(/\D/g, '');
         try {
             const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+            if (!response.ok) throw new Error('Falha ao consultar CEP');
+
             const data = await response.json();
 
             if (!data.erro) {
-                document.getElementById('street').value = data.logradouro;
-                document.getElementById('neighborhood').value = data.bairro;
-                document.getElementById('city').value = data.localidade;
-                document.getElementById('stateCode').value = data.uf;
-                document.getElementById('number').focus(); // Pula para o número
+                document.getElementById('street').value = data.logradouro || '';
+                document.getElementById('neighborhood').value = data.bairro || '';
+                document.getElementById('city').value = data.localidade || '';
+                document.getElementById('stateCode').value = data.uf || '';
+                document.getElementById('number').focus();
                 errorMessage.style.display = 'none';
             } else {
                 errorMessage.innerText = 'CEP não encontrado.';
@@ -45,11 +44,12 @@ cepInput.addEventListener('input', async (e) => {
             }
         } catch (error) {
             console.error("Erro no ViaCEP:", error);
+            errorMessage.innerText = 'Não foi possível consultar o CEP. Preencha o endereço manualmente.';
+            errorMessage.style.display = 'block';
         }
     }
 });
 
-// Lógica de Cadastro no Firebase
 registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -72,17 +72,15 @@ registerForm.addEventListener('submit', async (e) => {
     registerButton.innerText = 'Configurando loja...';
     registerButton.disabled = true;
 
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('email').value.trim();
 
     try {
-        // 1. Cria o usuário no Authentication
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // 2. Salva os dados da loja no Firestore
         await setDoc(doc(db, 'stores', user.uid), {
             store_id: user.uid,
-            name: document.getElementById('storeName').value,
+            name: document.getElementById('storeName').value.trim(),
             document: documentInput.value,
             phone: phoneInput.value,
             contact_email: email,
@@ -108,17 +106,15 @@ registerForm.addEventListener('submit', async (e) => {
             }
         });
 
-        console.log("Loja provisionada com sucesso!");
-        
-        // Redireciona de volta para a tela de login
-        window.location.href = "index.html";
-
+        window.location.href = "dashboard.html";
     } catch (error) {
         console.error("Erro no cadastro:", error);
         errorMessage.style.display = 'block';
-        
+
         if (error.code === 'auth/email-already-in-use') {
             errorMessage.innerText = 'Este e-mail já está em uso.';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage.innerText = 'Informe um e-mail válido.';
         } else {
             errorMessage.innerText = 'Erro ao provisionar a loja. Tente novamente.';
         }
